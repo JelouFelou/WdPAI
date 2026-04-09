@@ -1,13 +1,92 @@
-<script src="public/scripts/main.js" defer></script>
-<nav>
-  <div class="container"> <span><i class="fa-solid fa-sun"></i></span>
+<!-- Otwieramy główne kontenery układu -->
+<div class="base-container">
+    <nav class="sidebar">
+        <div class="sidebar-top">
+            <div class="logo-container">
+                <span class="logo-text">OC<span>Studio</span></span>
+            </div>
+            
+            <ul class="nav-menu">
+                <li>
+                    <a href="dashboard" class="active">
+                        <i class="fa-solid fa-house"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa-solid fa-users"></i>
+                        <span>Postacie</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Szablony</span>
+                    </a>
+                </li>
+            </ul>
 
-    <i class="fa-solid fa-bars display-mobile"></i>
+            <div class="sidebar-section">
+                <span class="section-title">TWOJE POSTACIE</span>
+                <ul class="nav-menu characters-list">
+                    <li>
+                        <a href="#">
+                            <div class="char-avatar-mini"></div>
+                            <span>Alysia Thorne</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#">
+                            <div class="char-avatar-mini"></div>
+                            <span>Kaelen Vance</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
 
-    <ul>
-      <li><a href="/"><i class="fa-solid fa-house"></i> HOME</a></li>
-      <li><a href="/dashboard"><i class="fa-solid fa-address-book"></i> PROFILE</a></li>
-      <li><a href="/dashboard"><i class="fa-solid fa-diagram-project"></i> ADD PROJECT</a></li>
-    </ul>
-  </div>
-</nav>
+        <div class="sidebar-bottom-menu">
+            <div class="storage-info">
+                <div class="storage-text">
+                    <span>Storage</span>
+                    <span>85%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 85%;"></div>
+                </div>
+                <span class="storage-detail">Used 425MB of 500MB</span>
+            </div>
+
+            <ul class="nav-menu">
+                <li>
+                    <a href="#">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <!-- Sidebar footer usunięty - wyloguj przeniesione do headera -->
+    </nav>
+
+    <main class="main-content">
+        <header class="top-header">
+            <div class="search-wrapper">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" placeholder="Szukaj postaci, tagów...">
+            </div>
+            
+            <div class="header-right">
+                <a href="login" class="logout-header-btn" title="Wyloguj się">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </a>
+                <div class="user-profile">
+                    <div class="user-info-text">
+                        <span class="user-name">Adrian Bober</span>
+                        <span class="user-plan">Pro Plan</span>
+                    </div>
+                    <img src="https://ui-avatars.com/api/?name=Adrian+Bober&background=FF8A00&color=fff" alt="Avatar">
+                </div>
+            </div>
+        </header>

@@ -1,21 +1,46 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-     <?php include __DIR__ . '/partials/head.html'; ?>
-</head>
-<body>
-    <?php include __DIR__ . '/partials/nav.html'; ?>
-    <div class="main-container" style="display: flex; flex-wrap: wrap;"> 
-        <main>
-            <h1>Dashboard</h1>
-            <p><?= $title; ?></p>
-        </main>
-        <aside>
-            <p>Sidebar content</p>
-        </aside>
+<div class="content-view">
+    <section class="welcome-section">
+        <h1>Dashboard</h1>
+        <p>Witaj z powrotem, Twórco!</p>
+    </section>
+
+    <!-- Statystyki z prototypu -->
+    <div class="stats-container">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-person"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Wszystkie postacie</span>
+                <span class="stat-value">12</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-file-code"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Szablony</span>
+                <span class="stat-value">4</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
+            <div class="stat-info">
+                <span class="stat-label">Ulubione</span>
+                <span class="stat-value">3</span>
+            </div>
+        </div>
     </div>
-    <footer>
-        Stopka strony
-    </footer>
-</body>
-</html>
+
+    <div class="dashboard-grid">
+        <div class="placeholder-card add-card">
+            <i class="fa-solid fa-plus"></i>
+            <p>Dodaj nową postać</p>
+        </div>
+        <!-- Przykładowa karta postaci -->
+        <div class="placeholder-card char-card">
+            <div class="char-img-placeholder"></div>
+            <div class="char-info-simple">
+                <strong>Alysia Thorne</strong>
+                <span>High Elf Paladin</span>
+            </div>
+        </div>
+    </div>
+</div>

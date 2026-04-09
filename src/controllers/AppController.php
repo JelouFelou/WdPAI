@@ -1,6 +1,5 @@
 <?php
 
-
 class AppController {
     protected function isGet(): bool
     {
@@ -12,27 +11,46 @@ class AppController {
         return $_SERVER["REQUEST_METHOD"] === 'POST';
     }
  
-    protected function render(string $template = null, array $variables = [])
+    protected function render(?string $template = null, array $variables = [])
     {
-        $templatePath = 'public/views/'. $template.'.html';
-        $templatePath404 = 'public/views/404.html';
-        $output = "";
-                 
+        // Określamy ścieżkę bazową do widoków
+        $basePath = __DIR__.'/../../public/views/';
+        
+        $templatePath = $basePath . $template . '.html';
+        $headPath = $basePath . 'partials/head.html';
+        $navPath = $basePath . 'partials/nav.html';
+        
         if(file_exists($templatePath)){
             extract($variables);
-            // ["tab_name" => $title]
-
-            // $tab_name = $title
 
             ob_start();
+            
+            // Dołączamy nagłówek
+            if (file_exists($headPath)) {
+                include $headPath;
+            }
+
+            // Jeśli to nie jest login, dołączamy nawigację
+            if ($template !== 'login' && file_exists($navPath)) {
+                include $navPath;
+            }
+
             include $templatePath;
+
+            // Domykamy tagi, jeśli to nie login
+            if ($template !== 'login') {
+                echo '    </main>'; 
+                echo '</div>';      
+            }
+            
+            echo '</body></html>';
+            
             $output = ob_get_clean();
         } else {
-            ob_start();
-            include $templatePath404;
-            $output = ob_get_clean();
+            // Prosta informacja o braku pliku dla debugowania
+            $output = "Błąd: Nie znaleziono pliku widoku: " . $templatePath;
         }
+        
         echo $output;
     }
-
 }

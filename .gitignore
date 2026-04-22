@@ -1,0 +1,5 @@
+# Ignoruj wszystkie pliki w folderze uploads
+public/uploads/*
+
+# Ale zachowaj sam folder (opcjonalnie)
+!public/uploads/.gitkeep

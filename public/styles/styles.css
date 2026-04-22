@@ -261,28 +261,74 @@ body {
     font-weight: 700;
 }
 
+/* Kontener siatki - zapewnia równe odstępy */
 .dashboard-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 25px;
+    padding: 20px 0;
+    align-items: stretch;
 }
 
-.placeholder-card {
-    background: white;
-    height: 280px;
-    border-radius: 15px;
-    border: 1px solid #eee;
+/* Wspólne wymiary dla obu typów kart */
+.placeholder-card, .character-card {
+    width: 100%;
+    height: 300px; /* Ustaw taką wysokość, jaką ma Twój placeholder */
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    transition: 0.3s;
+    overflow: hidden; /* To utnie wystające zdjęcia */
+    background: white;
+}
+
+/* Specyfika karty "Dodaj nową" (zostawiamy Twój styl) */
+.add-card {
+    border: 2px dashed #ddd;
+    background: transparent;
+    justify-content: center;
+    align-items: center;
     cursor: pointer;
 }
 
-.add-card {
-    justify-content: center;
-    align-items: center;
-    border: 2px dashed #ddd;
-    background: transparent;
-    color: var(--text-muted);
+/* Karta postaci - dopasowanie zdjęcia */
+.character-card {
+    border: 1px solid #eee;
+    position: relative;
+}
+
+.card-image-wrapper {
+    width: 100%;
+    height: 100%; /* Zdjęcie wypełnia całą kartę, jeśli chcesz napisy NA nim */
+    position: relative;
+}
+
+.card-image-wrapper img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* SKALUJE I UCINA BOKI, zachowując proporcje wysokości */
+    object-position: center; /* Środkuje kadr */
+    display: block;
+}
+
+/* Napisy na dole obrazka (żeby nie zabierały miejsca pod nim) */
+.card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+    color: white;
+    pointer-events: none;
+}
+
+.card-content h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.card-content p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
 }

@@ -10,7 +10,9 @@
             <div class="stat-icon"><i class="fa-solid fa-person"></i></div>
             <div class="stat-info">
                 <span class="stat-label">Wszystkie postacie</span>
-                <span class="stat-value">12</span>
+                <span class="stat-value">
+                    <?= isset($characterCount) ? $characterCount : 0; ?>
+                </span>
             </div>
         </div>
         <div class="stat-card">
@@ -23,24 +25,38 @@
         <div class="stat-card">
             <div class="stat-icon"><i class="fa-solid fa-star"></i></div>
             <div class="stat-info">
-                <span class="stat-label">Ulubione</span>
+                <span class="stat-label">Światy</span>
                 <span class="stat-value">3</span>
             </div>
         </div>
     </div>
 
     <div class="dashboard-grid">
-        <div class="placeholder-card add-card">
+    <div class="placeholder-card add-card">
+        <div class="add-icon-circle">
             <i class="fa-solid fa-plus"></i>
-            <p>Dodaj nową postać</p>
         </div>
-        <!-- Przykładowa karta postaci -->
-        <div class="placeholder-card char-card">
-            <div class="char-img-placeholder"></div>
-            <div class="char-info-simple">
-                <strong>Alysia Thorne</strong>
-                <span>High Elf Paladin</span>
-            </div>
-        </div>
+        <p>Dodaj nową postać</p>
     </div>
+
+    <?php if(isset($characters) && is_array($characters)): ?>
+        <?php foreach ($characters as $char): ?>
+            <div class="character-card">
+                <div class="card-image-wrapper">
+                    <?php $img = $char->getImage() ?: 'default_avatar.png'; ?>
+                    <img src="public/uploads/<?= $img ?>" alt="Character">
+                    
+                    <div class="card-overlay">
+                        <button class="action-btn"><i class="fa-regular fa-eye"></i></button>
+                        <button class="action-btn"><i class="fa-regular fa-pen-to-square"></i></button>
+                    </div>
+
+                    <div class="card-content">
+                        <h3><?= $char->getName(); ?></h3>
+                        <p><?= $char->getDescription(); ?></p>
+                    </div>
+                </div>
+            </div>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </div>

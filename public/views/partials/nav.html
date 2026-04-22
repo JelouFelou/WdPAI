@@ -83,7 +83,13 @@
                 </a>
                 <div class="user-profile">
                     <div class="user-info-text">
-                        <span class="user-name">Adrian Bober</span>
+                        <span class="user-name">
+                            <?php if(isset($_SESSION['user_id'])): ?>
+                                <?= $_SESSION['first_name'] ?? 'User' ?> <?= $_SESSION['last_name'] ?? '' ?>
+                            <?php else: ?>
+                                User
+                            <?php endif; ?>
+                        </span>
                         <span class="user-plan">Pro Plan</span>
                     </div>
                     <img src="https://ui-avatars.com/api/?name=Adrian+Bober&background=FF8A00&color=fff" alt="Avatar">

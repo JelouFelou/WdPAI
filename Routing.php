@@ -29,6 +29,8 @@ Class Routing {
         switch($path) {
             case 'dashboard':
             case '':
+            case 'index':
+            case 'register':
             case 'login':
                 $controller = Routing::$routes[$path]["controller"];
                 $action = Routing::$routes[$path]["action"];

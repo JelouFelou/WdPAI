@@ -1,27 +1,51 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <?php include __DIR__ . '/partials/head.html'; ?>
-  </head>
-  <body>
-    <form method="POST" action="\register">
-      <h1>REGISTER FORM</h1>
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-logo">
+            OC<span>Studio</span>
+        </div>
+        <h2>Stwórz konto</h2>
+        <p class="auth-subtitle">Dołącz do społeczności twórców postaci</p>
 
-      <?php if(isset($messages)): ?>
-        <?php foreach($messages as $message): ?>
-          <p class="messages">
-              <?= $message; ?>
-          </p>
-        <?php endforeach; ?>
-      <?php endif; ?>
-      
-      <input name="email" type="email" placeholder="Twój email" />
-      <input name="password" type="password" placeholder="Twoje hasło" />
-      <input name="password2" type="password" placeholder="Powtórz hasło" />
+        <?php if(isset($messages)): ?>
+            <?php foreach($messages as $message): ?>
+                <div class="messages">
+                    <i class="fa-solid fa-circle-exclamation"></i> <?= $message; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
 
-      <input name="firstName" type="text" placeholder="Imie" />
-      <input name="lastName" type="text" placeholder="Nazwisko" />
-      <button type="submit">REGISTER</button>
-    </form>
-  </body>
-</html>
+        <form class="auth-form" method="POST" action="/register">
+            <div class="input-row">
+                <div class="input-group">
+                    <label>Imię</label>
+                    <input name="firstName" type="text" placeholder="Jan" required>
+                </div>
+                <div class="input-group">
+                    <label>Nazwisko</label>
+                    <input name="lastName" type="text" placeholder="Kowalski" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Adres E-mail</label>
+                <input name="email" type="email" placeholder="twoj@email.com" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Hasło</label>
+                <input name="password" type="password" placeholder="••••••••" required>
+            </div>
+
+            <div class="input-group">
+                <label>Powtórz hasło</label>
+                <input name="password2" type="password" placeholder="••••••••" required>
+            </div>
+
+            <button type="submit" class="auth-btn">ZAREJESTRUJ SIĘ</button>
+        </form>
+
+        <p class="auth-footer">
+            Masz już konto? <a href="/login">Zaloguj się</a>
+        </p>
+    </div>
+</div>

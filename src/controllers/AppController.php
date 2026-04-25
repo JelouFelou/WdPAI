@@ -31,7 +31,6 @@ class AppController {
         
         if(file_exists($templatePath)){
             extract($variables);
-
             ob_start();
             
             // Dołączamy nagłówek
@@ -39,8 +38,10 @@ class AppController {
                 include $headPath;
             }
 
+            
+            
             // Jeśli to nie jest login, dołączamy nawigację
-            if ($template !== 'login' && file_exists($navPath)) {
+            if ($template !== 'login' && $template !== 'register' && file_exists($navPath)) {
                 include $navPath;
             }
 

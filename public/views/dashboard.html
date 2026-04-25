@@ -1,7 +1,10 @@
 <div class="content-view">
     <section class="welcome-section">
-        <h1>Dashboard</h1>
-        <p>Witaj z powrotem, Twórco!</p>
+        <div class="grid-controls">
+            <span>Widok: </span>
+            <input type="range" id="column-slider" min="3" max="10" value="4">
+            <span id="column-count">4</span>
+        </div>
     </section>
 
     <!-- Statystyki z prototypu -->
@@ -32,31 +35,65 @@
     </div>
 
     <div class="dashboard-grid">
-    <div class="placeholder-card add-card">
-        <div class="add-icon-circle">
-            <i class="fa-solid fa-plus"></i>
-        </div>
-        <p>Dodaj nową postać</p>
-    </div>
-
-    <?php if(isset($characters) && is_array($characters)): ?>
-        <?php foreach ($characters as $char): ?>
-            <div class="character-card">
-                <div class="card-image-wrapper">
-                    <?php $img = $char->getImage() ?: 'default_avatar.png'; ?>
-                    <img src="public/uploads/<?= $img ?>" alt="Character">
-                    
-                    <div class="card-overlay">
-                        <button class="action-btn"><i class="fa-regular fa-eye"></i></button>
-                        <button class="action-btn"><i class="fa-regular fa-pen-to-square"></i></button>
-                    </div>
-
-                    <div class="card-content">
-                        <h3><?= $char->getName(); ?></h3>
-                        <p><?= $char->getDescription(); ?></p>
-                    </div>
+        <div class="character-card add-card-wrapper">
+            <div class="card-image-wrapper add-card-trigger">
+                <div class="add-content-placeholder">
+                    <i class="fa-solid fa-plus"></i>
                 </div>
             </div>
-        <?php endforeach; ?>
-    <?php endif; ?>
-</div>
+            <div class="card-content">
+                <h3>Dodaj nową</h3>
+                <p>Stwórz kolejnego bohatera</p>
+            </div>
+        </div>
+
+        <?php if(isset($characters) && is_array($characters)): ?>
+            <?php foreach ($characters as $char): ?>
+                <div class="character-card">
+                    <div class="card-image-wrapper">
+                        <?php $img = $char->getImage() ?: 'default_avatar.png'; ?>
+                        <img src="public/uploads/<?= $img ?>" alt="Character">
+                        <div class="card-content">
+                            <h3><?= $char->getName(); ?></h3>
+                            <p><?= $char->getDescription(); ?></p>
+                        </div>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php endif; ?>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const slider = document.getElementById('column-slider');
+    const columnText = document.getElementById('column-count');
+    
+    function adjustSliderLimits() {
+        const width = window.innerWidth;
+        
+        if (width < 800) {
+            slider.max = 3; // Na małym oknie max 3 kolumny
+            if (slider.value > 3) slider.value = 3;
+        } else if (width < 1200) {
+            slider.max = 6; // Na średnim oknie max 6
+        } else {
+            slider.max = 10; // Pełna szerokość
+        }
+        
+        // Wywołaj aktualizację grida z nową wartością
+        document.documentElement.style.setProperty('--grid-columns', slider.value);
+        columnText.innerText = slider.value;
+    }
+
+    // Sprawdzaj przy starcie i przy każdej zmianie rozmiaru okna
+    window.addEventListener('resize', adjustSliderLimits);
+    adjustSliderLimits();
+
+    // Twoja istniejąca logika suwaka...
+    slider.addEventListener('input', function() {
+        columnText.innerText = this.value;
+        document.documentElement.style.setProperty('--grid-columns', this.value);
+        localStorage.setItem('dashboard-columns', this.value);
+    });
+});
+</script>

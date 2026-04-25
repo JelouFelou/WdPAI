@@ -1,26 +1,34 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <?php include __DIR__ . '/partials/head.html'; ?>
+<div class="auth-wrapper">
+    <div class="auth-container">
+        <div class="auth-logo">
+            OC<span>Studio</span>
+        </div>
+        <h2>Zaloguj się</h2>
+        <p class="auth-subtitle">Witaj z powrotem! Podaj swoje dane.</p>
 
-  </head>
-  <body>
-    <form method="POST" action="\login">
-      <h1>LOGIN</h1>
+        <form action="/login" method="POST" class="auth-form">
+            <div class="input-group">
+                <label>Email</label>
+                <input type="email" name="email" placeholder="twoj@email.com" required>
+            </div>
+            
+            <div class="input-group">
+                <label>Hasło</label>
+                <input type="password" name="password" placeholder="••••••••" required>
+            </div>
 
-      <?php if(isset($messages)): ?>
-        <?php foreach($messages as $message): ?>
-          <p class="messages">
-              <?= $message; ?>
-          </p>
-        <?php endforeach; ?>
-      <?php endif; ?>
+            <div class="auth-options">
+                <label class="checkbox-container">
+                    <input type="checkbox"> Zapamiętaj mnie
+                </label>
+                <a href="#">Zapomniałeś hasła?</a>
+            </div>
 
-      <input name="email" type="email" placeholder="Twój email" />
-      <input name="password" type="password" placeholder="Twoje hasło" />
-      <button type="submit">LOGIN</button>
+            <button type="submit" class="auth-btn">Zaloguj się</button>
+        </form>
 
-      <a href="/register">zarejestruj się!</a>
-    </form>
-  </body>
-</html>
+        <p class="auth-footer">
+            Nie masz konta? <a href="/register">Zarejestruj się za darmo</a>
+        </p>
+    </div>
+</div>

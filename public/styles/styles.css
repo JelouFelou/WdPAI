@@ -310,7 +310,7 @@ body {
     position: relative;
     border: 1px solid #eee;
     /* Zwiększona wysokość bazowa (550px), aby przy 3 kolumnach były smukłe i wysokie */
-    height: auto;           /* Wywalamy calc */
+    height: auto;
     aspect-ratio: 2 / 3;
     min-height: 150px;
     transition: all 0.3s ease;
@@ -407,4 +407,374 @@ body {
     .content-view {
         padding: 15px; /* Mniejszy margines na telefonie */
     }
+}
+
+
+/* --- Zarządzanie Szablonami --- */
+
+.templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 25px;
+    margin-top: 2rem;
+}
+
+.template-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    border: 1px solid #edf2f7;
+    display: flex;
+    flex-direction: column; /* Zmiana na pionowy układ dla lepszego wyglądu */
+    gap: 16px;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.template-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 20px rgba(0,0,0,0.08);
+    border-color: var(--primary);
+}
+
+.template-top-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.template-icon {
+    font-size: 1.5rem;
+    color: var(--primary);
+    background: var(--primary-light);
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+}
+
+.template-info h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #1a202c;
+}
+
+.template-info p {
+    margin: 4px 0 0;
+    font-size: 0.85rem;
+    color: #718096;
+    line-height: 1.4;
+}
+
+.template-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #f7fafc;
+}
+
+.template-actions button {
+    background: #f7fafc;
+    border: none;
+    cursor: pointer;
+    color: #4a5568;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.template-actions button:hover {
+    background: #edf2f7;
+    color: var(--primary);
+}
+
+.template-actions .delete-btn:hover {
+    background: #fff5f5;
+    color: #e53e3e;
+}
+
+/* Stan pusty (Empty State) */
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 20px;
+    border: 2px dashed #e2e8f0;
+    color: #a0aec0;
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: 15px;
+    display: block;
+}
+
+/* --- Kreator Szablonów (Kreator Schematu) --- */
+
+/* --- KREATOR 1:1 Z PROTOTYPEM --- */
+
+.template-container {
+    padding: 20px 40px; /* Mniejszy padding góra/dół, solidny na boki */
+    max-width: 1600px;  /* Zwiększamy z 1300px na 1600px (lub 95% dla full width) */
+    margin: 0 auto;
+    width: 95%;         /* Zapewnia, że na mniejszych monitorach też będzie szeroko */
+}
+
+.template-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 30px;
+}
+
+.header-info h1 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.header-info p {
+    color: #666;
+    font-size: 14px;
+}
+
+/* Przyciski akcji w nagłówku */
+.header-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.btn-secondary {
+    background: #eee;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 25px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Sekcja Meta - Biała karta */
+.template-meta {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    margin-bottom: 25px;
+    display: flex;
+    gap: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    width: 100%; /* Wypełnij całą dostępną szerokość */
+    box-sizing: border-box;
+}
+
+.template-meta .input-group {
+    flex: 1;
+}
+
+.template-meta label {
+    display: block;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 10px;
+}
+
+.template-meta input, .template-meta textarea {
+    width: 100%;
+    border: 1px solid #eee;
+    background: #fdfdfd;
+    padding: 12px;
+    border-radius: 10px;
+    font-family: inherit;
+}
+
+/* Główny Grid Kreatora */
+.template-grid {
+    display: grid;
+    grid-template-columns: 1fr 420px; /* Lewa zajmuje resztę, prawa jest teraz szersza (420px) */
+    gap: 25px;
+    align-items: start;
+}
+
+.template-column {
+    background: white;
+    border-radius: 20px;
+    padding: 30px; /* Więcej oddechu wewnątrz kart */
+    min-height: 600px; /* Żeby kolumny nie wyglądały na puste przy starcie */
+}
+
+.template-column h3 {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Prawa kolumna - Ciemniejszy Infobox jak na zdjęciu */
+.right-panel {
+    background: #f8f9fa; /* Jasnoszare tło dla kontrastu */
+    border: 1px solid #eee;
+}
+
+.infobox-preview {
+    background: white;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+}
+
+.image-placeholder {
+    width: 100%;
+    height: 320px; /* Nieco wyższe, skoro kolumna jest szersza */
+    background: #2a2a2a;
+    border-radius: 15px;
+}
+
+.image-placeholder i {
+    font-size: 40px;
+    margin-bottom: 10px;
+}
+
+/* Styl pól (Field Items) */
+.field-item {
+    background: #fff;
+    border: 1px solid #eee;
+    margin-bottom: 10px;
+    padding: 10px 15px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+}
+
+.field-item.dragging {
+    opacity: 0.5;
+    border: 2px dashed var(--primary);
+    background: var(--primary-light);
+}
+
+.drag-handle {
+    cursor: grab; /* Zmiana kursora na rączkę */
+    color: var(--text-muted);
+    padding: 10px;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Przycisk dodawania pola - "Plus" w kółku jak w projekcie */
+.add-field-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.add-circle-btn {
+    background: #f0f0f0;
+    color: #333;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex; /* Wyśrodkowanie ikony */
+    align-items: center;
+    justify-content: center;
+    border: none;
+    cursor: pointer;
+    transition: 0.2s;
+    margin: 0 auto; /* Centrowanie przycisku w kontenerze */
+}
+
+.add-circle-btn:hover {
+    background: var(--primary);
+    color: white;
+}
+
+
+/* Modal */
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 450px;
+    text-align: center;
+}
+
+.modal-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin: 25px 0;
+}
+
+.type-option {
+    border: 2px solid transparent;
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 15px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.type-option i { font-size: 24px; color: #666; }
+.type-option:hover {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.type-option:hover i { color: var(--primary); }
+
+.type-preview-tag {
+    margin-top: 5px;
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    opacity: 0.7;
+}
+
+.animated-fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }

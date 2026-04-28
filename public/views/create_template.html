@@ -1,0 +1,135 @@
+<div class="template-container">
+    <header class="template-header">
+        <div class="header-info">
+            <h1>Kreator Schematu</h1>
+            <p>Zdefiniuj strukturę dla swoich postaci. Pola po lewej będą treścią, pola po prawej stworzą infobox.</p>
+        </div>
+        <div class="header-actions">
+            <button type="button" class="btn-secondary" onclick="window.location.href='/templates'">Anuluj</button>
+            <button type="submit" form="template-form" class="btn-primary">Zapisz Schemat</button>
+        </div>
+    </header>
+
+    <form id="template-form" action="/createTemplate" method="POST">
+        <?php if(isset($template)): ?>
+        <input type="hidden" name="template_id" value="<?= $template['id'] ?>">
+        <?php endif; ?>
+        <section class="template-meta">
+            <div class="input-group">
+                <label>Nazwa schematu</label>
+                <input type="text" name="template_name"
+                    value="<?= isset($template) ? htmlspecialchars($template['name']) : '' ?>"
+                    placeholder="np. Fantasy Character v1" required>
+            </div>
+            <div class="input-group">
+                <label>Opis (opcjonalnie)</label>
+                <textarea name="template_description"
+                    placeholder="Do czego służy ten schemat..."><?= isset($template) ? htmlspecialchars($template['description']) : '' ?></textarea>
+            </div>
+        </section>
+
+        <div class="template-grid">
+            <div class="template-column left-panel">
+                <h3><i class="fa-solid fa-align-left"></i> Treść główna (lewa)</h3>
+                <div id="left-fields" class="fields-container">
+                    <?php if(isset($template) && isset($template['fields'])): ?>
+                    <?php foreach($template['fields'] as $field): ?>
+                    <?php if($field['location'] === 'left'): ?>
+                    <div class="field-item draggable" draggable="true">
+                        <i class="fa-solid fa-grip-vertical drag-handle"></i>
+                        <div class="field-content">
+                            <input type="text" name="field_labels[]" value="<?= htmlspecialchars($field['label']) ?>"
+                                required>
+                            <input type="hidden" name="field_locations[]" value="left" class="field-location">
+                            <input type="hidden" name="field_types[]" value="<?= $field['field_type'] ?>"
+                                class="field-type">
+                            <div class="type-preview-tag">
+                                <small>
+                                    <?= $field['field_type'] === 'list' ? '<i class="fa-solid fa-list"></i> Typ: Lista' : '<i class="fa-solid fa-font"></i> Typ: Tekst' ?>
+                                </small>
+                            </div>
+                        </div>
+                        <button type="button" class="delete-field-btn" onclick="this.parentElement.remove()"><i
+                                class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <div class="add-field-container">
+                    <button type="button" class="add-circle-btn" onclick="openFieldModal('left')">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="template-column right-panel">
+                <h3><i class="fa-solid fa-circle-info"></i> Infobox (prawa)</h3>
+                <div id="right-fields" class="fields-container">
+                    <?php if(isset($template) && isset($template['fields'])): ?>
+                    <?php foreach($template['fields'] as $field): ?>
+                    <?php if($field['location'] === 'right'): ?>
+                    <div class="field-item draggable" draggable="true">
+                        <i class="fa-solid fa-grip-vertical drag-handle"></i>
+                        <div class="field-content">
+                            <input type="text" name="field_labels[]" value="<?= htmlspecialchars($field['label']) ?>"
+                                required>
+                            <input type="hidden" name="field_locations[]" value="right" class="field-location">
+                            <input type="hidden" name="field_types[]" value="<?= $field['field_type'] ?>"
+                                class="field-type">
+                            <div class="type-preview-tag">
+                                <small>
+                                    <?= $field['field_type'] === 'list' ? '<i class="fa-solid fa-list"></i> Typ: Lista' : '<i class="fa-solid fa-font"></i> Typ: Tekst' ?>
+                                </small>
+                            </div>
+                        </div>
+                        <button type="button" class="delete-field-btn" onclick="this.parentElement.remove()"><i
+                                class="fa-solid fa-xmark"></i></button>
+                    </div>
+                    <?php endif; ?>
+                    <?php endforeach; ?>
+                    <?php endif; ?>
+                </div>
+                <div class="add-field-container">
+                    <button type="button" class="add-circle-btn" onclick="openFieldModal('right')">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div id="type-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h3>Wybierz typ pola</h3>
+        <div class="modal-options">
+            <button type="button" class="type-option" id="opt-text">
+                <i class="fa-solid fa-align-left"></i>
+                <span>Pole tekstowe</span>
+            </button>
+            <button type="button" class="type-option" id="opt-list">
+                <i class="fa-solid fa-list-ul"></i>
+                <span>Lista atrybutów</span>
+            </button>
+        </div>
+        <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
+    </div>
+</div>
+
+<template id="field-template">
+    <div class="field-item draggable" draggable="true">
+        <i class="fa-solid fa-grip-vertical drag-handle"></i>
+        <div class="field-content">
+            <input type="text" name="field_labels[]" placeholder="Nazwa pola..." required>
+            <input type="hidden" name="field_locations[]" value="" class="field-location">
+            <input type="hidden" name="field_types[]" value="" class="field-type">
+            <div class="type-preview-tag"><small></small></div>
+        </div>
+        <button type="button" class="delete-field-btn" onclick="this.parentElement.remove()">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+</template>
+
+<script src="public/scripts/template_creator.js"></script>

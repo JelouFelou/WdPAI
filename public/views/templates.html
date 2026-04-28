@@ -1,0 +1,70 @@
+<div class="content-view">
+    <section class="content-header">
+        <div class="header-text">
+            <h1>Twoje Szablony</h1>
+            <p>Zarządzaj strukturami swoich postaci</p>
+        </div>
+        <button onclick="window.location.href='/createTemplate'" class="btn-primary">
+            <i class="fa-solid fa-plus"></i> Dodaj nowy szablon
+        </button>
+    </section>
+
+    <div class="templates-grid">
+        <?php if(isset($templates) && !empty($templates)): ?>
+        <?php foreach($templates as $template): ?>
+        <div class="template-card">
+            <div class="template-top-row">
+                <div class="template-icon">
+                    <i class="fa-solid fa-file-invoice"></i>
+                </div>
+                <div class="template-info">
+                    <h3>
+                        <?= $template->getName(); ?>
+                    </h3>
+                    <p>
+                        <?= $template->getDescription(); ?>
+                    </p>
+                </div>
+            </div>
+
+            <div class="template-actions">
+                <button title="Edytuj" onclick="window.location.href='/editTemplate?id=<?= $template->getId(); ?>'">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                </button>
+
+                <button title="Duplikuj"
+                    onclick="duplicate('<?= $template->getId(); ?>', '<?= $template->getName(); ?>')">
+                    <i class="fa-solid fa-copy"></i>
+                </button>
+
+                <button title="Usuń" class="delete-btn"
+                    onclick="if(confirm('Na pewno usunąć?')) window.location.href='/deleteTemplate?id=<?= $template->getId(); ?>'">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+
+            <form id="duplicate-form" action="/duplicateTemplate" method="POST" style="display:none;">
+                <input type="hidden" name="id" id="duplicate-id">
+                <input type="hidden" name="new_name" id="duplicate-name">
+            </form>
+        </div>
+        <?php endforeach; ?>
+        <?php else: ?>
+        <div class="empty-state">
+            <i class="fa-solid fa-folder-open"></i>
+            <p>Nie masz jeszcze żadnych szablonów. Stwórz pierwszy, aby dodać postać!</p>
+        </div>
+        <?php endif; ?>
+    </div>
+</div>
+
+<script>
+function duplicate(id, oldName) {
+    const newName = prompt("Podaj nazwę dla duplikatu:", oldName + " (kopia)");
+    if (newName) {
+        document.getElementById('duplicate-id').value = id;
+        document.getElementById('duplicate-name').value = newName;
+        document.getElementById('duplicate-form').submit();
+    }
+}
+</script>

@@ -26,47 +26,48 @@ class TemplateController extends AppController
     }
 
     public function createTemplate()
-{
-    $this->requireLogin();
+    {
+        $this->requireLogin();
 
-    if ($this->isPost()) {
-        $name = $_POST['template_name'];
-        $description = $_POST['template_description'];
-        $userId = $_SESSION['user_id'];
-        $templateId = $_POST['template_id'] ?? null; // Pobieramy ID jeśli istnieje
+        if ($this->isPost()) {
+            $name = $_POST['template_name'];
+            $description = $_POST['template_description'];
+            $userId = $_SESSION['user_id'];
+            $templateId = $_POST['template_id'] ?? null;
 
-        // Przygotowanie pól
-        $fields = [];
-        $labels = $_POST['field_labels'] ?? [];
-        $locations = $_POST['field_locations'] ?? [];
-        $types = $_POST['field_types'] ?? [];
+            // Przygotowanie pól
+            $fields = [];
+            $labels = $_POST['field_labels'] ?? [];
+            $locations = $_POST['field_locations'] ?? [];
+            $types = $_POST['field_types'] ?? [];
 
-        foreach ($labels as $index => $label) {
-            $fields[] = [
-                'label' => $label,
-                'location' => $locations[$index],
-                'type' => $types[$index]
-            ];
-        }
-
-        try {
-            if ($templateId) {
-                // Jeśli mamy ID, robimy UPDATE
-                $this->templateRepository->updateTemplate((int)$templateId, $name, $description, $fields);
-            } else {
-                // Jeśli nie ma ID, robimy ADD
-                $this->templateRepository->addTemplate($name, $description, $userId, $fields);
+            foreach ($labels as $index => $label) {
+                $fields[] = [
+                    'label' => $label,
+                    'location' => $locations[$index],
+                    'type' => $types[$index]
+                ];
             }
-            header("Location: /templates");
-        } catch (Exception $e) {
-            header("Location: /dashboard");
+
+            try {
+                if ($templateId) {
+                    $this->templateRepository->updateTemplate((int) $templateId, $name, $description, $fields);
+                } else {
+                    $this->templateRepository->addTemplate($name, $description, $userId, $fields);
+                }
+                header("Location: /templates");
+            } catch (Exception $e) {
+                header("Location: /dashboard");
+            }
+            return;
         }
-        return;
+
+        // PRZEKAZUJEMY PUStą zmienną, aby uniknąć błędów isset() w szablonie
+        $this->render('create_template', [
+            'title' => 'Nowy Szablon',
+            'template' => null
+        ]);
     }
-
-    $this->render('create_template', ['title' => 'Nowy Szablon']);
-}
-
     public function deleteTemplate()
     {
         $id = $_GET['id'];
@@ -106,5 +107,5 @@ class TemplateController extends AppController
         ]);
     }
 
-    
+
 }

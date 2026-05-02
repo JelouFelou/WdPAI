@@ -1,24 +1,16 @@
 <div class="template-container">
-    <header class="template-header">
+    <header class="template-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
         <div class="header-info">
             <h1>
                 <?= isset($character) ? 'Edycja Postaci' : 'Kreator Postaci' ?>
             </h1>
             <p>Wprowadź dane i zapisz swoją postać.</p>
         </div>
-        <div class="header-actions">
-            <button type="button" class="btn-secondary" onclick="window.location.href='/dashboard'">Anuluj</button>
-            <button type="submit" form="character-form" class="btn-primary">Zapisz postać</button>
-        </div>
-    </header>
 
-    <form id="character-form"
-        action="<?= isset($character) ? '/editCharacter?id='.$character->getId() : '/createCharacter' ?>" method="POST">
-
-        <section class="template-meta">
-            <div class="input-group">
-                <label>Wybierz schemat postaci</label>
-                <select name="template_id" id="template-select" required onchange="loadTemplateFields(this.value)">
+        <div class="header-template-select" style="flex: 1; max-width: 380px; min-width: 250px;">
+            <div class="input-group" style="margin-bottom: 0;">
+                <label style="font-size: 0.75rem; margin-bottom: 4px;">Wybierz schemat postaci</label>
+                <select name="template_id" id="template-select" required onchange="loadTemplateFields(this.value)" style="height: 42px; padding: 6px 12px;">
                     <option value="" disabled selected>-- Wybierz schemat --</option>
                     <?php if(isset($templates) && !empty($templates)): ?>
                         <?php foreach($templates as $template): ?>
@@ -29,30 +21,43 @@
                     <?php endif; ?>
                 </select>
             </div>
+        </div>
 
-            <div class="input-group">
-                <label>Nazwa postaci</label>
-                <input type="text" name="character_name"
-                    value="<?= isset($character) ? htmlspecialchars($character->getName()) : '' ?>"
-                    placeholder="np. Alysia Thorne" required>
+        <div class="header-actions" style="display: flex; gap: 10px;">
+            <button type="button" class="btn-secondary" onclick="window.location.href='/dashboard'">Anuluj</button>
+            <button type="submit" form="character-form" class="btn-primary">Zapisz postać</button>
+        </div>
+    </header>
+
+    <form id="character-form"
+        action="<?= isset($character) ? '/editCharacter?id='.$character->getId() : '/createCharacter' ?>" method="POST">
+
+        <div class="template-sections" style="margin-top: 24px;">
+            <div>
+                <div id="left-fields-container" style="display: flex; flex-direction: column; gap: 15px;"></div>
             </div>
 
-            <div class="input-group">
-                <label>Opis postaci</label>
-                <textarea name="character_description"
-                    placeholder="Wpisz opis..."><?= isset($character) ? htmlspecialchars($character->getDescription()) : '' ?></textarea>
-            </div>
-        </section>
+            <div>                
+                <div class="character-profile-wrapper">
+                    <div class="input-group full-width">
+                        <input type="text" name="character_name" 
+                            value="<?= isset($character) ? htmlspecialchars($character->getName()) : '' ?>" 
+                            placeholder="Imię i nazwisko" required>
+                    </div>
 
-        <div class="template-sections" style="display: flex; gap: 20px; margin-top: 20px;">
-            <div style="flex: 1; background: #fff; padding: 20px; border-radius: 10px;">
-                <h3>Treść / Główne informacje</h3>
-                <div id="left-fields-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
-            </div>
+                    <div class="template-meta-right">
+                        <img id="profile-img-preview" src="public/uploads/<?= isset($character) ? htmlspecialchars($character->getImage()) : 'default.jpg' ?>" alt="Zdjęcie postaci">
+                        <label for="profile-image-upload" class="upload-label">Wgraj zdjęcie</label>
+                        <input type="file" id="profile-image-upload" name="character_image" accept="image/*">
+                    </div>
 
-            <div style="flex: 1; background: #fff; padding: 20px; border-radius: 10px;">
-                <h3>Infobox / Cechy</h3>
-                <div id="right-fields-container" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    <div class="input-group full-width">
+                        <textarea name="character_description" rows="3" 
+                            placeholder="Opis / Krótka biografia"><?= isset($character) ? htmlspecialchars($character->getDescription()) : '' ?></textarea>
+                    </div>
+                </div>
+
+                <div id="right-fields-container" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px; width: 100%;"></div>
             </div>
         </div>
     </form>
@@ -61,23 +66,40 @@
 <script src="public/scripts/character_creator.js"></script>
 
 <?php if(isset($character) && $character->getIdTemplate()): ?>
-    <input type="hidden" id="character-template-id" value="<?= $character->getIdTemplate(); ?>">
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            const templateIdInput = document.getElementById('character-template-id');
-            if (templateIdInput && templateIdInput.value) {
-                const selectElement = document.getElementById('template-select');
-                if (selectElement) {
-                    selectElement.value = templateIdInput.value;
+<input type="hidden" id="character-template-id" value="<?= $character->getIdTemplate(); ?>">
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const templateIdInput = document.getElementById('character-template-id');
+        if (templateIdInput && templateIdInput.value) {
+            const selectElement = document.getElementById('template-select');
+            if (selectElement) {
+                selectElement.value = templateIdInput.value;
+                if (typeof loadTemplateFields === 'function') {
+                    loadTemplateFields(templateIdInput.value);
                 }
-                loadTemplateFields(templateIdInput.value);
             }
-        });
-    </script>
+        }
+
+        const imageInput = document.getElementById('profile-image-upload');
+        const imagePreview = document.getElementById('profile-img-preview');
+        if (imageInput && imagePreview) {
+            imageInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (evt) {
+                        imagePreview.src = evt.target.result;
+                    }
+                    reader.readAsDataURL(file);
+                }
+            });
+        }
+    });
+</script>
 <?php endif; ?>
 
 <?php if(isset($characterFieldValues)): ?>
-    <script>
-        window.characterFieldValues = <?= json_encode($characterFieldValues); ?>;
-    </script>
+<script>
+    window.characterFieldValues = <?= json_encode($characterFieldValues); ?>;
+</script>
 <?php endif; ?>

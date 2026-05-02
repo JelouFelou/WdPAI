@@ -3,8 +3,9 @@
 require_once 'src/controllers/SecurityController.php';
 require_once 'src/controllers/DashboardController.php';
 require_once 'src/controllers/TemplateController.php';
-
-Class Routing {
+require_once 'src/controllers/CharacterController.php';
+class Routing
+{
 
     public static $routes = [
         "login" => [
@@ -43,11 +44,24 @@ Class Routing {
             'controller' => 'TemplateController',
             'action' => 'editTemplate'
         ],
+        'createCharacter' => [
+            'controller' => 'CharacterController',
+            'action' => 'createCharacter'
+        ],
+        'getTemplateData' => [
+            'controller' => 'CharacterController',
+            'action' => 'getTemplateData'
+        ],
+        'editCharacter' => [
+            'controller' => 'CharacterController',
+            'action' => 'editCharacter'
+        ],
     ];
 
-    public static function run(string $path) {
+    public static function run(string $path)
+    {
         // TODO sprawdzać za pomoca array_key_exists
-        switch($path) {
+        switch ($path) {
             case 'dashboard':
             case '':
             case 'index':
@@ -58,6 +72,9 @@ Class Routing {
             case 'deleteTemplate':
             case 'duplicateTemplate':
             case 'editTemplate':
+            case 'createCharacter':
+            case 'getTemplateData':
+            case 'editCharacter':
                 $controller = Routing::$routes[$path]["controller"];
                 $action = Routing::$routes[$path]["action"];
 
@@ -67,7 +84,7 @@ Class Routing {
                 $controllerObj->$action($id);
                 $urlParts = explode("?", $path);
                 $actionKey = $urlParts[0]; // To przekazujemy do switcha
-                break; 
+                break;
             default:
                 include 'public/views/404.html';
                 break;

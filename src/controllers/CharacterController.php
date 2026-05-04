@@ -81,9 +81,11 @@ class CharacterController extends AppController
         $character = $this->characterRepository->getCharacterById($id);
 
         if ($this->isPost()) {
-            $name = $_POST['character_name'];
-            $description = $_POST['character_description'];
-            $templateId = $_POST['template_id'];
+            $name = $_POST['character_name'] ?? '';
+            $description = $_POST['character_description'] ?? '';
+
+            // Fix: Handle cases where 'template_id' might not be set
+            $templateId = $_POST['template_id'] ?? null;
 
             $image = $character ? $character->getImage() : 'default.jpg';
             $this->characterRepository->updateCharacter($id, $name, $description, $image, $templateId);

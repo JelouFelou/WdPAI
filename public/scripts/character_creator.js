@@ -65,3 +65,14 @@ async function loadTemplateFields(templateId) {
         console.error('Wystąpił błąd podczas pobierania danych:', error);
     }
 }
+
+function updateTemplateId(value) {
+    // Aktualizuje ukryty input w formularzu
+    const hiddenInput = document.getElementById('form-template-id');
+    if (hiddenInput) {
+        hiddenInput.value = value;
+    }
+    
+    // Ładowanie pól schematu (oryginalna funkcja)
+    loadTemplateFields(value);
+}

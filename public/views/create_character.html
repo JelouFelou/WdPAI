@@ -10,7 +10,7 @@
         <div class="header-template-select" style="flex: 1; max-width: 380px; min-width: 250px;">
             <div class="input-group" style="margin-bottom: 0;">
                 <label style="font-size: 0.75rem; margin-bottom: 4px;">Wybierz schemat postaci</label>
-                <select name="template_id" id="template-select" required onchange="loadTemplateFields(this.value)" style="height: 42px; padding: 6px 12px;">
+                <select name="template_id" id="template-select" required onchange="updateTemplateId(this.value)" style="height: 42px; padding: 6px 12px;">
                     <option value="" disabled selected>-- Wybierz schemat --</option>
                     <?php if(isset($templates) && !empty($templates)): ?>
                         <?php foreach($templates as $template): ?>
@@ -29,9 +29,10 @@
         </div>
     </header>
 
-    <form id="character-form"
-        action="<?= isset($character) ? '/editCharacter?id='.$character->getId() : '/createCharacter' ?>" method="POST">
+    <form id="character-form" action="<?= isset($character) ? '/editCharacter?id='.$character->getId() : '/createCharacter' ?>" method="POST">
 
+        <input type="hidden" name="template_id" id="form-template-id" value="">
+        
         <div class="template-sections" style="margin-top: 24px;">
             <div>
                 <div id="left-fields-container" style="display: flex; flex-direction: column; gap: 15px;"></div>

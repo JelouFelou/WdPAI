@@ -12,35 +12,42 @@ class CharacterController extends AppController
     public function __construct()
     {
         $this->characterRepository = new CharacterRepository();
-        $this->templateRepository = new TemplateRepository();
+        $this->templateRepository  = new TemplateRepository();
+    }
+
+    /**
+     * Zamienia wartość POST na ?int – pusty string i "0" traktuje jako null.
+     */
+    private function parseTemplateId(mixed $raw): ?int
+    {
+        if ($raw === null || $raw === '' || $raw === '0') {
+            return null;
+        }
+        $int = (int) $raw;
+        return $int > 0 ? $int : null;
     }
 
     public function createCharacter()
     {
         $this->requireLogin();
 
-        // Jeśli wysłano formularz, zapisujemy postać
         if ($this->isPost()) {
-            $name = $_POST['character_name'];
-            $description = $_POST['character_description'];
-            $templateId = $_POST['template_id'];
-            $userId = $_SESSION['user_id'];
+            $name        = $_POST['character_name']        ?? '';
+            $description = $_POST['character_description'] ?? '';
+            $templateId  = $this->parseTemplateId($_POST['template_id'] ?? null);
+            $userId      = $_SESSION['user_id'];
+            $image       = 'default.jpg';
 
-            // Przykładowy obrazek domyślny lub pobrany z formularza
-            $image = 'default.jpg';
-
-            // Zapis do bazy (zakładamy, że dodasz metodę addCharacter w CharacterRepository)
             $this->characterRepository->addCharacter($name, $description, $image, $userId, $templateId);
 
             header('Location: /dashboard');
             exit();
         }
 
-        // Pobieramy szablony, aby użytkownik mógł wybrać, na podstawie którego schematu tworzy postać
         $templates = $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']);
 
         return $this->render('create_character', [
-            'title' => 'Stwórz postać - OCStudio',
+            'title'     => 'Stwórz postać - OCStudio',
             'templates' => $templates
         ]);
     }
@@ -48,22 +55,27 @@ class CharacterController extends AppController
     public function getTemplateData()
     {
         header('Content-Type: application/json');
+
         if (!isset($_GET['id'])) {
             echo json_encode(['error' => 'Brak ID szablonu']);
             exit();
         }
 
-        $id = (int) $_GET['id'];
-        $template = $this->templateRepository->getTemplate($id); // Zwraca obiekt Template (zawierający pola)
+        $id       = (int) $_GET['id'];
+        $template = $this->templateRepository->getTemplate($id);
 
-        // Ponieważ TemplateRepository posiada metodę getTemplateFields(id):
+        if (!$template) {
+            echo json_encode(['error' => 'Nie znaleziono szablonu']);
+            exit();
+        }
+
         $fields = $this->templateRepository->getTemplateFields($id);
 
         echo json_encode([
-            'id' => $template->getId(),
-            'name' => $template->getName(),
+            'id'          => $template->getId(),
+            'name'        => $template->getName(),
             'description' => $template->getDescription(),
-            'fields' => $fields
+            'fields'      => $fields
         ]);
         exit();
     }
@@ -72,7 +84,7 @@ class CharacterController extends AppController
     {
         $this->requireLogin();
 
-        $id = $_GET['id'] ?? null;
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
         if (!$id) {
             header('Location: /dashboard');
             exit();
@@ -80,18 +92,20 @@ class CharacterController extends AppController
 
         $character = $this->characterRepository->getCharacterById($id);
 
+        if (!$character) {
+            header('Location: /dashboard');
+            exit();
+        }
+
         if ($this->isPost()) {
-            $name = $_POST['character_name'] ?? '';
+            $name        = $_POST['character_name']        ?? '';
             $description = $_POST['character_description'] ?? '';
+            $templateId  = $this->parseTemplateId($_POST['template_id'] ?? null);
+            $image       = $character->getImage() ?: 'default.jpg';
 
-            // Fix: Handle cases where 'template_id' might not be set
-            $templateId = $_POST['template_id'] ?? null;
-
-            $image = $character ? $character->getImage() : 'default.jpg';
             $this->characterRepository->updateCharacter($id, $name, $description, $image, $templateId);
 
-            // Zapisz/zaktualizuj wartości pól
-            if (isset($_POST['field_values'])) {
+            if (isset($_POST['field_values']) && is_array($_POST['field_values'])) {
                 $this->characterRepository->saveCharacterFieldValues($id, $_POST['field_values']);
             }
 
@@ -99,17 +113,13 @@ class CharacterController extends AppController
             exit();
         }
 
-        $templates = $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']);
-
-        $characterValues = [];
-        if ($character) {
-            $characterValues = $this->characterRepository->getCharacterFieldValues($character->getId());
-        }
+        $templates       = $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']);
+        $characterValues = $this->characterRepository->getCharacterFieldValues($character->getId());
 
         return $this->render('create_character', [
-            'title' => 'Edytuj postać - OCStudio',
-            'character' => $character,
-            'templates' => $templates,
+            'title'               => 'Edytuj postać - OCStudio',
+            'character'           => $character,
+            'templates'           => $templates,
             'characterFieldValues' => $characterValues
         ]);
     }

@@ -1,3 +1,18 @@
+<?php
+// Helper – zwraca etykietę i ikonę dla danego typu pola
+function fieldTypeMeta(string $type): array {
+    return match($type) {
+        'textarea'        => ['icon' => 'fa-align-left',    'label' => 'Długi tekst',    'color' => 'var(--text-muted,#888)'],
+        'list'            => ['icon' => 'fa-list',           'label' => 'Lista',          'color' => 'var(--primary,#3498db)'],
+        'image'           => ['icon' => 'fa-image',          'label' => 'Zdjęcie',        'color' => 'var(--success,#27ae60)'],
+        'image-gallery'   => ['icon' => 'fa-images',         'label' => 'Galeria',        'color' => 'var(--success,#27ae60)'],
+        'table'           => ['icon' => 'fa-table',          'label' => 'Tabela',         'color' => 'var(--secondary,#8e44ad)'],
+        'date'            => ['icon' => 'fa-calendar-days',  'label' => 'Data',           'color' => 'var(--warning,#e67e22)'],
+        'select'          => ['icon' => 'fa-chevron-down',   'label' => 'Wybór z listy',  'color' => 'var(--info,#2980b9)'],
+        default           => ['icon' => 'fa-font',           'label' => 'Tekst',          'color' => ''],
+    };
+}
+?>
 <div class="template-container">
     <header class="template-header">
         <div class="header-info">
@@ -14,6 +29,7 @@
         <?php if(isset($template)): ?>
         <input type="hidden" name="template_id" value="<?= $template['id'] ?>">
         <?php endif; ?>
+
         <section class="template-meta">
             <div class="input-group">
                 <label>Nazwa schematu</label>
@@ -29,106 +45,130 @@
         </section>
 
         <div class="template-grid">
-            <div class="template-column left-panel">
-                <h3><i class="fa-solid fa-align-left"></i> Treść główna (lewa)</h3>
-                <div id="left-fields" class="fields-container">
-                    <?php if(isset($template) && isset($template['fields'])): ?>
+            <?php foreach(['left' => ['id'=>'left-fields',  'title'=>'<i class="fa-solid fa-align-left"></i> Treść główna (lewa)'],
+                           'right'=> ['id'=>'right-fields', 'title'=>'<i class="fa-solid fa-circle-info"></i> Infobox (prawa)']]
+                          as $side => $col): ?>
+            <div class="template-column <?= $side ?>-panel">
+                <h3><?= $col['title'] ?></h3>
+                <div id="<?= $col['id'] ?>" class="fields-container">
+                    <?php if(isset($template['fields'])): ?>
                     <?php foreach($template['fields'] as $field): ?>
-                    <?php if($field['location'] === 'left'): ?>
+                    <?php if($field['location'] !== $side) continue; ?>
+                    <?php
+                        $ftype = htmlspecialchars($field['field_type']);
+                        $meta  = fieldTypeMeta($field['field_type']);
+                        $phRaw = $field['placeholder'] ?? '';
+                    ?>
                     <div class="field-item draggable" draggable="true">
                         <i class="fa-solid fa-grip-vertical drag-handle"></i>
                         <div class="field-content">
-                            <input type="text" name="field_labels[]" value="<?= htmlspecialchars($field['label']) ?>"
-                                required>
-                            <input type="hidden" name="field_locations[]" value="left" class="field-location">
-                            <input type="hidden" name="field_types[]" value="<?= $field['field_type'] ?>"
-                                class="field-type">
-                            <div class="type-preview-tag">
-                                <small>
-                                    <?= $field['field_type'] === 'list' ? '<i class="fa-solid fa-list"></i> Typ: Lista' : '<i class="fa-solid fa-font"></i> Typ: Tekst' ?>
-                                </small>
+                            <input type="text" name="field_labels[]"
+                                value="<?= htmlspecialchars($field['label']) ?>" required>
+                            <input type="hidden" name="field_locations[]"    value="<?= $side ?>"  class="field-location">
+                            <input type="hidden" name="field_types[]"        value="<?= $ftype ?>" class="field-type">
+                            <input type="hidden" name="field_placeholders[]" value="<?= htmlspecialchars($phRaw) ?>" class="field-placeholder">
+                            <div class="type-preview-tag" <?= $meta['color'] ? 'style="color:'.$meta['color'].'"' : '' ?>>
+                                <small><i class="fa-solid <?= $meta['icon'] ?>"></i> Typ: <?= $meta['label'] ?></small>
                             </div>
-                        </div>
-                        <button type="button" class="delete-field-btn" onclick="this.parentElement.remove()"><i
-                                class="fa-solid fa-xmark"></i></button>
-                    </div>
-                    <?php endif; ?>
-                    <?php endforeach; ?>
-                    <?php endif; ?>
-                </div>
-                <div class="add-field-container">
-                    <button type="button" class="add-circle-btn" onclick="openFieldModal('left')">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                </div>
-            </div>
 
-            <div class="template-column right-panel">
-                <h3><i class="fa-solid fa-circle-info"></i> Infobox (prawa)</h3>
-                <div id="right-fields" class="fields-container">
-                    <?php if(isset($template) && isset($template['fields'])): ?>
-                    <?php foreach($template['fields'] as $field): ?>
-                    <?php if($field['location'] === 'right'): ?>
-                    <div class="field-item draggable" draggable="true">
-                        <i class="fa-solid fa-grip-vertical drag-handle"></i>
-                        <div class="field-content">
-                            <input type="text" name="field_labels[]" value="<?= htmlspecialchars($field['label']) ?>"
-                                required>
-                            <input type="hidden" name="field_locations[]" value="right" class="field-location">
-                            <input type="hidden" name="field_types[]" value="<?= $field['field_type'] ?>"
-                                class="field-type">
-                            <div class="type-preview-tag">
-                                <small>
-                                    <?= $field['field_type'] === 'list' ? '<i class="fa-solid fa-list"></i> Typ: Lista' : '<i class="fa-solid fa-font"></i> Typ: Tekst' ?>
-                                </small>
+                            <?php if($field['field_type'] === 'table'): ?>
+                            <div class="table-rows-editor" style="display:none;margin-top:10px;padding:10px;background:var(--surface-alt,#f5f5f5);border-radius:8px;border:1px solid var(--border,#ddd);">
+                                <span style="font-size:0.8rem;color:var(--text-muted,#888);margin-bottom:6px;display:block;"><i class="fa-solid fa-table"></i> Wiersze tabeli:</span>
+                                <div class="table-rows-container">
+                                    <div class="add-row-btn-wrap">
+                                        <button type="button" onclick="addTableRow(this)" style="background:none;border:1px dashed var(--primary,#3498db);color:var(--primary,#3498db);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:0.85rem;width:100%;margin-top:4px;">
+                                            <i class="fa-solid fa-plus"></i> Dodaj wiersz</button>
+                                    </div>
+                                </div>
                             </div>
+                            <?php elseif($field['field_type'] === 'select'): ?>
+                            <div class="select-options-editor" style="display:none;margin-top:10px;padding:10px;background:var(--surface-alt,#f5f5f5);border-radius:8px;border:1px solid var(--border,#ddd);">
+                                <span style="font-size:0.8rem;color:var(--text-muted,#888);margin-bottom:6px;display:block;"><i class="fa-solid fa-chevron-down"></i> Opcje do wyboru:</span>
+                                <div class="select-options-container">
+                                    <div class="add-opt-btn-wrap">
+                                        <button type="button" onclick="addSelectOption(this)" style="background:none;border:1px dashed var(--primary,#3498db);color:var(--primary,#3498db);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:0.85rem;width:100%;margin-top:4px;">
+                                            <i class="fa-solid fa-plus"></i> Dodaj opcję</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <?php elseif($field['field_type'] === 'date'): ?>
+                            <div class="date-editor" style="display:none;margin-top:10px;padding:10px;background:var(--surface-alt,#f5f5f5);border-radius:8px;border:1px solid var(--border,#ddd);">
+                                <span style="font-size:0.8rem;color:var(--text-muted,#888);margin-bottom:6px;display:block;"><i class="fa-solid fa-calendar"></i> Miesiące:</span>
+                                <div class="months-container">
+                                    <div class="add-month-btn-wrap">
+                                        <button type="button" onclick="addMonthRow(this)" style="background:none;border:1px dashed var(--primary,#3498db);color:var(--primary,#3498db);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:0.85rem;width:100%;margin-top:4px;">
+                                            <i class="fa-solid fa-plus"></i> Dodaj miesiąc</button>
+                                    </div>
+                                </div>
+                                <span style="font-size:0.8rem;color:var(--text-muted,#888);margin:10px 0 6px;display:block;"><i class="fa-solid fa-hourglass"></i> Ery (opcjonalnie):</span>
+                                <div class="eras-container">
+                                    <div class="add-era-btn-wrap">
+                                        <button type="button" onclick="addEraRow(this)" style="background:none;border:1px dashed var(--primary,#3498db);color:var(--primary,#3498db);border-radius:6px;padding:4px 12px;cursor:pointer;font-size:0.85rem;width:100%;margin-top:4px;">
+                                            <i class="fa-solid fa-plus"></i> Dodaj erę</button>
+                                    </div>
+                                </div>
+                                <span style="font-size:0.8rem;color:var(--text-muted,#888);margin:10px 0 6px;display:block;"><i class="fa-solid fa-star"></i> Domyślny rok:</span>
+                                <input type="text" class="default-year-input" placeholder="np. 1200"
+                                    style="width:100%;padding:6px 10px;border-radius:6px;border:1px solid var(--border,#ccc);background:var(--input-bg,#fff);color:var(--text,#333);font-size:0.9rem;box-sizing:border-box;">
+                            </div>
+                            <?php endif; ?>
                         </div>
-                        <button type="button" class="delete-field-btn" onclick="this.parentElement.remove()"><i
-                                class="fa-solid fa-xmark"></i></button>
+                        <button type="button" class="delete-field-btn" onclick="this.parentElement.remove()">
+                            <i class="fa-solid fa-xmark"></i></button>
                     </div>
-                    <?php endif; ?>
                     <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
                 <div class="add-field-container">
-                    <button type="button" class="add-circle-btn" onclick="openFieldModal('right')">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
+                    <button type="button" class="add-circle-btn" onclick="openFieldModal('<?= $side ?>')">
+                        <i class="fa-solid fa-plus"></i></button>
                 </div>
             </div>
+            <?php endforeach; ?>
         </div>
     </form>
 </div>
 
-<div id="type-modal" class="modal-overlay" style="display: none;">
-    <div class="modal-content">
+<!-- ===== Modal wyboru typu pola ===== -->
+<div id="type-modal" class="modal-overlay" style="display:none;">
+    <div class="modal-content" style="max-width:520px;">
         <h3>Wybierz typ pola</h3>
-        <div class="modal-options">
+        <div class="modal-options" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
             <button type="button" class="type-option" id="opt-text">
-                <i class="fa-solid fa-align-left"></i>
-                <span>Pole tekstowe</span>
-            </button>
+                <i class="fa-solid fa-font"></i><span>Tekst</span></button>
+            <button type="button" class="type-option" id="opt-textarea">
+                <i class="fa-solid fa-align-left"></i><span>Długi tekst</span></button>
             <button type="button" class="type-option" id="opt-list">
-                <i class="fa-solid fa-list-ul"></i>
-                <span>Lista atrybutów</span>
-            </button>
+                <i class="fa-solid fa-list-ul"></i><span>Lista (bullet)</span></button>
+            <button type="button" class="type-option" id="opt-select">
+                <i class="fa-solid fa-chevron-down"></i><span>Wybór z listy</span></button>
+            <button type="button" class="type-option" id="opt-image">
+                <i class="fa-solid fa-image"></i><span>Zdjęcie</span></button>
+            <button type="button" class="type-option" id="opt-image-gallery">
+                <i class="fa-solid fa-images"></i><span>Galeria zdjęć</span></button>
+            <button type="button" class="type-option" id="opt-table">
+                <i class="fa-solid fa-table"></i><span>Tabela</span></button>
+            <button type="button" class="type-option" id="opt-date">
+                <i class="fa-solid fa-calendar-days"></i><span>Data</span></button>
         </div>
-        <button type="button" class="btn-secondary" onclick="closeModal()">Anuluj</button>
+        <button type="button" class="btn-secondary" style="margin-top:14px;" onclick="closeModal()">Anuluj</button>
     </div>
 </div>
 
+<!-- ===== Szablon nowego pola (klonowany przez JS) ===== -->
 <template id="field-template">
     <div class="field-item draggable" draggable="true">
         <i class="fa-solid fa-grip-vertical drag-handle"></i>
         <div class="field-content">
             <input type="text" name="field_labels[]" placeholder="Nazwa pola..." required>
-            <input type="hidden" name="field_locations[]" value="" class="field-location">
-            <input type="hidden" name="field_types[]" value="" class="field-type">
+            <input type="hidden" name="field_locations[]"    value="" class="field-location">
+            <input type="hidden" name="field_types[]"        value="" class="field-type">
+            <input type="hidden" name="field_placeholders[]" value="" class="field-placeholder">
             <div class="type-preview-tag"><small></small></div>
+            <!-- Edytory zostaną wstrzyknięte przez createField() -->
         </div>
         <button type="button" class="delete-field-btn" onclick="this.parentElement.remove()">
-            <i class="fa-solid fa-xmark"></i>
-        </button>
+            <i class="fa-solid fa-xmark"></i></button>
     </div>
 </template>
 

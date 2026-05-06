@@ -45,9 +45,9 @@ class TemplateRepository extends Repository
     public function getTemplatesByUserId(int $userId): array
     {
         $result = [];
-        $stmt = $this->database->connect()->prepare('
-        SELECT * FROM templates WHERE id_user = :userId
-    ');
+        $stmt   = $this->database->connect()->prepare('
+            SELECT * FROM templates WHERE id_user = :userId
+        ');
         $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -78,18 +78,20 @@ class TemplateRepository extends Repository
             $stmt->execute([$name, $description, $userId]);
             $templateId = $stmt->fetchColumn();
 
+            // Teraz zapisujemy też kolumnę placeholder (JSON z wierszami tabeli lub pusty string)
             $stmtField = $db->prepare('
-                INSERT INTO template_fields (id_template, label, field_type, location, order_number)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO template_fields (id_template, label, field_type, location, order_number, placeholder)
+                VALUES (?, ?, ?, ?, ?, ?)
             ');
 
             foreach ($fields as $index => $field) {
                 $stmtField->execute([
                     $templateId,
                     $field['label'],
-                    $field['type'] ?? 'text',
-                    $field['location'] ?? 'left',
-                    $index
+                    $field['type']        ?? 'text',
+                    $field['location']    ?? 'left',
+                    $index,
+                    $field['placeholder'] ?? '',
                 ]);
             }
 
@@ -103,8 +105,8 @@ class TemplateRepository extends Repository
     public function deleteTemplate(int $id, int $userId): bool
     {
         $stmt = $this->database->connect()->prepare('
-        DELETE FROM templates WHERE id = :id AND id_user = :userId
-    ');
+            DELETE FROM templates WHERE id = :id AND id_user = :userId
+        ');
         $stmt->bindParam(':id', $id, PDO::PARAM_INT);
         $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
         return $stmt->execute();
@@ -113,58 +115,57 @@ class TemplateRepository extends Repository
     public function getTemplateWithFields(int $id): ?array
     {
         $stmt = $this->database->connect()->prepare('
-        SELECT * FROM templates WHERE id = :id
-    ');
+            SELECT * FROM templates WHERE id = :id
+        ');
         $stmt->execute(['id' => $id]);
         $template = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$template)
-            return null;
+        if (!$template) return null;
 
         $stmtFields = $this->database->connect()->prepare('
-        SELECT * FROM template_fields WHERE id_template = :id ORDER BY order_number ASC
-    ');
+            SELECT * FROM template_fields WHERE id_template = :id ORDER BY order_number ASC
+        ');
         $stmtFields->execute(['id' => $id]);
         $template['fields'] = $stmtFields->fetchAll(PDO::FETCH_ASSOC);
 
         return $template;
     }
 
-    public function updateTemplate(int $id, string $name, string $description, array $fields): void {
-    $db = $this->database->connect();
-    try {
-        $db->beginTransaction();
+    public function updateTemplate(int $id, string $name, string $description, array $fields): void
+    {
+        $db = $this->database->connect();
+        try {
+            $db->beginTransaction();
 
-        // 1. Aktualizacja nazwy i opisu
-        $stmt = $db->prepare('
-            UPDATE templates SET name = ?, description = ? WHERE id = ?
-        ');
-        $stmt->execute([$name, $description, $id]);
+            // 1. Aktualizacja nazwy i opisu
+            $stmt = $db->prepare('UPDATE templates SET name = ?, description = ? WHERE id = ?');
+            $stmt->execute([$name, $description, $id]);
 
-        // 2. Usunięcie starych pól (najprostszy sposób na synchronizację)
-        $stmtDel = $db->prepare('DELETE FROM template_fields WHERE id_template = ?');
-        $stmtDel->execute([$id]);
+            // 2. Usunięcie starych pól
+            $stmtDel = $db->prepare('DELETE FROM template_fields WHERE id_template = ?');
+            $stmtDel->execute([$id]);
 
-        // 3. Wstawienie aktualnych pól
-        $stmtField = $db->prepare('
-            INSERT INTO template_fields (id_template, label, field_type, location, order_number)
-            VALUES (?, ?, ?, ?, ?)
-        ');
+            // 3. Wstawienie aktualnych pól (z placeholder)
+            $stmtField = $db->prepare('
+                INSERT INTO template_fields (id_template, label, field_type, location, order_number, placeholder)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ');
 
-        foreach ($fields as $index => $field) {
-            $stmtField->execute([
-                $id,
-                $field['label'],
-                $field['type'] ?? 'text',
-                $field['location'] ?? 'left',
-                $index
-            ]);
+            foreach ($fields as $index => $field) {
+                $stmtField->execute([
+                    $id,
+                    $field['label'],
+                    $field['type']        ?? 'text',
+                    $field['location']    ?? 'left',
+                    $index,
+                    $field['placeholder'] ?? '',
+                ]);
+            }
+
+            $db->commit();
+        } catch (Exception $e) {
+            $db->rollBack();
+            throw $e;
         }
-
-        $db->commit();
-    } catch (Exception $e) {
-        $db->rollBack();
-        throw $e;
     }
-}
 }

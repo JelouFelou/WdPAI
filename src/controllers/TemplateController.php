@@ -16,7 +16,6 @@ class TemplateController extends AppController
     {
         $this->requireLogin();
 
-        // Pobieramy szablony zalogowanego użytkownika
         $templates = $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']);
 
         $this->render('templates', [
@@ -30,22 +29,24 @@ class TemplateController extends AppController
         $this->requireLogin();
 
         if ($this->isPost()) {
-            $name = $_POST['template_name'];
+            $name        = $_POST['template_name'];
             $description = $_POST['template_description'];
-            $userId = $_SESSION['user_id'];
-            $templateId = $_POST['template_id'] ?? null;
+            $userId      = $_SESSION['user_id'];
+            $templateId  = $_POST['template_id'] ?? null;
 
-            // Przygotowanie pól
-            $fields = [];
-            $labels = $_POST['field_labels'] ?? [];
-            $locations = $_POST['field_locations'] ?? [];
-            $types = $_POST['field_types'] ?? [];
+            // Zbieramy pola – teraz także placeholder (JSON z wierszami tabeli lub pusty string)
+            $fields      = [];
+            $labels      = $_POST['field_labels']       ?? [];
+            $locations   = $_POST['field_locations']    ?? [];
+            $types       = $_POST['field_types']        ?? [];
+            $placeholders = $_POST['field_placeholders'] ?? [];
 
             foreach ($labels as $index => $label) {
                 $fields[] = [
-                    'label' => $label,
-                    'location' => $locations[$index],
-                    'type' => $types[$index]
+                    'label'       => $label,
+                    'location'    => $locations[$index]    ?? 'left',
+                    'type'        => $types[$index]        ?? 'text',
+                    'placeholder' => $placeholders[$index] ?? '',
                 ];
             }
 
@@ -62,12 +63,12 @@ class TemplateController extends AppController
             return;
         }
 
-        // PRZEKAZUJEMY PUStą zmienną, aby uniknąć błędów isset() w szablonie
         $this->render('create_template', [
-            'title' => 'Nowy Szablon',
+            'title'    => 'Nowy Szablon',
             'template' => null
         ]);
     }
+
     public function deleteTemplate()
     {
         $id = $_GET['id'];
@@ -78,7 +79,7 @@ class TemplateController extends AppController
     public function duplicateTemplate()
     {
         if ($this->isPost()) {
-            $id = $_POST['id'];
+            $id      = $_POST['id'];
             $newName = $_POST['new_name'];
 
             $original = $this->templateRepository->getTemplateWithFields($id);
@@ -96,16 +97,12 @@ class TemplateController extends AppController
 
     public function editTemplate()
     {
-        $id = $_GET['id'];
+        $id       = $_GET['id'];
         $template = $this->templateRepository->getTemplateWithFields($id);
 
-        // Tutaj renderujemy ten sam widok co przy tworzeniu, 
-        // ale przekazujemy dane istniejącego szablonu
         $this->render('create_template', [
             'template' => $template,
-            'isEdit' => true
+            'isEdit'   => true
         ]);
     }
-
-
 }

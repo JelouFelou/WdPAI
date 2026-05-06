@@ -10,11 +10,18 @@
         <div class="header-template-select" style="flex: 1; max-width: 380px; min-width: 250px;">
             <div class="input-group" style="margin-bottom: 0;">
                 <label style="font-size: 0.75rem; margin-bottom: 4px;">Wybierz schemat postaci</label>
-                <select name="template_id" id="template-select" required onchange="updateTemplateId(this.value)" style="height: 42px; padding: 6px 12px;">
-                    <option value="" disabled selected>-- Wybierz schemat --</option>
+                <!--
+                    Ten select jest POZA formularzem – służy tylko do wyświetlania i ładowania pól.
+                    Rzeczywista wartość template_id wysyłana do serwera pochodzi z hidden inputa
+                    WEWNĄTRZ formularza (#form-template-id) – aktualizowanego przez updateTemplateId().
+                -->
+                <select id="template-select" onchange="updateTemplateId(this.value)"
+                        style="height: 42px; padding: 6px 12px;">
+                    <option value="" disabled <?= (!isset($character) || !$character->getIdTemplate()) ? 'selected' : '' ?>>-- Wybierz schemat --</option>
                     <?php if(isset($templates) && !empty($templates)): ?>
                         <?php foreach($templates as $template): ?>
-                            <option value="<?= $template->getId(); ?>" <?= (isset($character) && $character->getIdTemplate() == $template->getId()) ? 'selected' : ''; ?>>
+                            <option value="<?= $template->getId(); ?>"
+                                <?= (isset($character) && $character->getIdTemplate() == $template->getId()) ? 'selected' : ''; ?>>
                                 <?= htmlspecialchars($template->getName()); ?>
                             </option>
                         <?php endforeach; ?>
@@ -29,31 +36,43 @@
         </div>
     </header>
 
-    <form id="character-form" action="<?= isset($character) ? '/editCharacter?id='.$character->getId() : '/createCharacter' ?>" method="POST">
+    <form id="character-form"
+          action="<?= isset($character) ? '/editCharacter?id='.$character->getId() : '/createCharacter' ?>"
+          method="POST">
 
-        <input type="hidden" name="template_id" id="form-template-id" value="">
-        
+        <!--
+            JEDYNY input z name="template_id" wysyłany do serwera.
+            Wartość ustawiana przez updateTemplateId() przy zmianie selecta
+            oraz przez JS przy ładowaniu strony (tryb edycji).
+        -->
+        <input type="hidden"
+               name="template_id"
+               id="form-template-id"
+               value="<?= isset($character) ? (int)$character->getIdTemplate() : '' ?>">
+
         <div class="template-sections" style="margin-top: 24px;">
             <div>
                 <div id="left-fields-container" style="display: flex; flex-direction: column; gap: 15px;"></div>
             </div>
 
-            <div>                
+            <div>
                 <div class="character-profile-wrapper">
                     <div class="input-group full-width">
-                        <input type="text" name="character_name" 
-                            value="<?= isset($character) ? htmlspecialchars($character->getName()) : '' ?>" 
+                        <input type="text" name="character_name"
+                            value="<?= isset($character) ? htmlspecialchars($character->getName()) : '' ?>"
                             placeholder="Imię i nazwisko" required>
                     </div>
 
                     <div class="template-meta-right">
-                        <img id="profile-img-preview" src="public/uploads/<?= isset($character) ? htmlspecialchars($character->getImage()) : 'default.jpg' ?>" alt="Zdjęcie postaci">
+                        <img id="profile-img-preview"
+                             src="public/uploads/<?= isset($character) ? htmlspecialchars($character->getImage()) : 'default.jpg' ?>"
+                             alt="Zdjęcie postaci">
                         <label for="profile-image-upload" class="upload-label">Wgraj zdjęcie</label>
                         <input type="file" id="profile-image-upload" name="character_image" accept="image/*">
                     </div>
 
                     <div class="input-group full-width">
-                        <textarea name="character_description" rows="3" 
+                        <textarea name="character_description" rows="3"
                             placeholder="Opis / Krótka biografia"><?= isset($character) ? htmlspecialchars($character->getDescription()) : '' ?></textarea>
                     </div>
                 </div>
@@ -66,41 +85,43 @@
 
 <script src="public/scripts/character_creator.js"></script>
 
-<?php if(isset($character) && $character->getIdTemplate()): ?>
-<input type="hidden" id="character-template-id" value="<?= $character->getIdTemplate(); ?>">
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const templateIdInput = document.getElementById('character-template-id');
-        if (templateIdInput && templateIdInput.value) {
-            const selectElement = document.getElementById('template-select');
-            if (selectElement) {
-                selectElement.value = templateIdInput.value;
-                if (typeof loadTemplateFields === 'function') {
-                    loadTemplateFields(templateIdInput.value);
-                }
-            }
-        }
-
-        const imageInput = document.getElementById('profile-image-upload');
-        const imagePreview = document.getElementById('profile-img-preview');
-        if (imageInput && imagePreview) {
-            imageInput.addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function (evt) {
-                        imagePreview.src = evt.target.result;
-                    }
-                    reader.readAsDataURL(file);
-                }
-            });
-        }
-    });
-</script>
-<?php endif; ?>
-
 <?php if(isset($characterFieldValues)): ?>
 <script>
     window.characterFieldValues = <?= json_encode($characterFieldValues); ?>;
 </script>
 <?php endif; ?>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    // --- Podgląd zdjęcia profilowego ---
+    const imageInput   = document.getElementById('profile-image-upload');
+    const imagePreview = document.getElementById('profile-img-preview');
+    if (imageInput && imagePreview) {
+        imageInput.addEventListener('change', function (e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = evt => { imagePreview.src = evt.target.result; };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    // --- Auto-ładowanie pól przy edycji ---
+    // form-template-id jest już wypełniony przez PHP (wartość z bazy),
+    // więc wystarczy go odczytać i załadować pola.
+    const formTemplateId = document.getElementById('form-template-id');
+    const selectEl       = document.getElementById('template-select');
+
+    if (formTemplateId && formTemplateId.value) {
+        // Upewnij się, że select też pokazuje właściwą opcję
+        if (selectEl) selectEl.value = formTemplateId.value;
+
+        // Załaduj pola – characterFieldValues jest już ustawione przez PHP powyżej
+        if (typeof loadTemplateFields === 'function') {
+            loadTemplateFields(formTemplateId.value);
+        }
+    }
+});
+</script>

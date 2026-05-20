@@ -21,5 +21,6 @@ class Character {
     public function getDescription(): string { return $this->description; }
     public function getImage(): string { return $this->image; }
     public function getId(): ?int { return $this->id; }
+    public function getIdUser(): int { return $this->id_user; }
     public function getIdTemplate(): ?int { return $this->id_template; } // Ważne: dodaj ten getter
 }

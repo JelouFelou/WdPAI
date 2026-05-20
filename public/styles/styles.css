@@ -266,6 +266,26 @@ transform: translateY(-8px); box-shadow: 0 12px 25px rgba(0,0,0,0.15); border-co
 .card-image-wrapper { width: 100%; height: 100%; position: relative; overflow: hidden; }
 .card-image-wrapper img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
+.card-edit-btn {
+position: absolute;
+top: 10px;
+right: 10px;
+width: 34px;
+height: 34px;
+border: none;
+border-radius: 8px;
+background: rgba(255,255,255,0.92);
+color: var(--text-main);
+display: flex;
+align-items: center;
+justify-content: center;
+cursor: pointer;
+z-index: 2;
+box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+.card-edit-btn:hover { background: var(--primary); color: white; }
+
 .card-content {
 position: absolute; bottom: 0; left: 0; right: 0;
 padding: calc(20px - var(--grid-columns) * 1px);
@@ -467,9 +487,405 @@ justify-content: center; border: none; cursor: pointer; margin: 20px auto;
 .character-card { aspect-ratio: 3 / 4; }
 }
 
+/* --- WIDOK POSTACI --- */
+.wiki-view {
+    width: 95%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 30px 30px 70px;
+    overflow-y: auto;
+}
+
+.wiki-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 24px 28px;
+    margin-bottom: 24px;
+    box-shadow: var(--card-shadow);
+}
+
+.wiki-header h1 {
+    margin: 8px 0 6px;
+    font-size: 2rem;
+    line-height: 1.15;
+}
+
+.wiki-header p { margin: 0; color: var(--text-muted); }
+
+.wiki-back-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.wiki-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 24px;
+    align-items: start;
+}
+
+.wiki-article,
+.wiki-infobox {
+    background: white;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: var(--card-shadow);
+}
+
+.wiki-article { padding: 28px 34px; }
+
+.wiki-section {
+    padding: 4px 0 24px;
+    margin-bottom: 22px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.wiki-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.wiki-section h2 {
+    margin: 0 0 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #d8dee4;
+    font-size: 1.35rem;
+}
+
+.wiki-section p,
+.wiki-infobox-field p,
+.wiki-list {
+    line-height: 1.7;
+    margin: 0;
+}
+
+.wiki-empty {
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.wiki-infobox {
+    position: sticky;
+    top: 90px;
+    overflow: hidden;
+}
+
+.wiki-infobox > img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+}
+
+.wiki-infobox h2 {
+    margin: 0;
+    padding: 18px 18px 4px;
+    font-size: 1.25rem;
+    text-align: center;
+}
+
+.wiki-infobox-subtitle {
+    margin: 0;
+    padding: 0 18px 16px;
+    color: var(--text-muted);
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.wiki-infobox-field {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.wiki-infobox-field:last-child { border-bottom: none; }
+
+.wiki-infobox-field h3 {
+    margin: 0 0 8px;
+    color: #555;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.wiki-list { padding-left: 22px; }
+
+.wiki-data-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.wiki-data-table th,
+.wiki-data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    vertical-align: top;
+    text-align: left;
+}
+
+.wiki-data-table tr:last-child th,
+.wiki-data-table tr:last-child td { border-bottom: none; }
+
+.wiki-data-table th {
+    width: 34%;
+    background: #f6f8fa;
+    color: #555;
+}
+
+.wiki-single-image img {
+    max-width: 100%;
+    max-height: 420px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.wiki-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 10px;
+}
+
+.wiki-gallery a {
+    display: block;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: #f6f8fa;
+}
+
+.wiki-gallery img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.wiki-gallery a:hover img { transform: scale(1.04); }
+
+@media (max-width: 1024px) {
+.wiki-layout { grid-template-columns: 1fr; }
+.wiki-infobox { position: static; order: -1; }
+}
+
+@media (max-width: 600px) {
+.wiki-view { padding: 15px; width: auto; }
+.wiki-header { flex-direction: column; padding: 18px; }
+.wiki-article { padding: 20px; }
+}
+
 /* Animacje */
 .animated-fade-in { animation: fadeIn 0.3s ease-out; }
 @keyframes fadeIn {
 from { opacity: 0; transform: translateY(10px); }
 to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- WARIANTY I LIGHTBOX --- */
+.template-sections {
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 18px;
+}
+
+.wiki-layout {
+    grid-template-columns: minmax(0, 1fr) 310px;
+    gap: 16px;
+}
+
+.wiki-article {
+    padding: 24px 28px;
+}
+
+.variant-editor {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--card-shadow);
+    padding: 24px;
+    margin-top: 24px;
+}
+
+.variant-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.variant-editor-header h2 {
+    margin: 0 0 6px;
+}
+
+.variant-editor-header p {
+    margin: 0;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+#variants-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.variant-card {
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    background: #fbfcfd;
+}
+
+.variant-card-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 40px;
+    gap: 12px;
+    align-items: end;
+}
+
+.variant-remove-btn {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    color: #c92a2a;
+    background: #fff0f0;
+    cursor: pointer;
+}
+
+.variant-image-row {
+    display: grid;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 14px;
+    align-items: center;
+    margin: 14px 0;
+}
+
+.variant-image-row img,
+.variant-image-placeholder {
+    width: 92px;
+    height: 92px;
+    border-radius: 10px;
+    object-fit: cover;
+    border: 1px solid var(--border-color);
+    background: #f1f3f5;
+}
+
+.variant-image-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+}
+
+.variant-fields-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.variant-selector {
+    padding: 14px;
+    border-bottom: 1px solid var(--border-color);
+    background: #fbfcfd;
+}
+
+.variant-selector label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.variant-selector select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    background: white;
+}
+
+.js-lightbox-image {
+    cursor: zoom-in;
+}
+
+.image-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: none;
+    background: rgba(12, 14, 18, 0.88);
+}
+
+.image-lightbox.open {
+    display: block;
+}
+
+.image-lightbox-stage {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    padding: 76px 24px 24px;
+    box-sizing: border-box;
+}
+
+.image-lightbox-stage img {
+    max-width: 92vw;
+    max-height: 82vh;
+    object-fit: contain;
+    transform-origin: center;
+    transition: transform 0.12s ease;
+}
+
+.image-lightbox-toolbar {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    display: flex;
+    gap: 8px;
+    z-index: 1;
+}
+
+.image-lightbox-toolbar button {
+    width: 40px;
+    height: 40px;
+    border: none;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.94);
+    color: #222;
+    cursor: pointer;
+}
+
+@media (max-width: 1024px) {
+    .template-sections,
+    .wiki-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 600px) {
+    .variant-editor-header,
+    .variant-image-row {
+        grid-template-columns: 1fr;
+    }
+
+    .variant-editor-header {
+        display: flex;
+        flex-direction: column;
+    }
 }

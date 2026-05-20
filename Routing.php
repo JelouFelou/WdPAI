@@ -57,6 +57,10 @@ class Routing
             'controller' => 'CharacterController',
             'action' => 'editCharacter'
         ],
+        'viewCharacter' => [
+            'controller' => 'CharacterController',
+            'action' => 'viewCharacter'
+        ],
         'uploadFile' => [
             'controller' => 'FileController',
             'action' => 'uploadFile'
@@ -80,6 +84,7 @@ class Routing
             case 'createCharacter':
             case 'getTemplateData':
             case 'editCharacter':
+            case 'viewCharacter':
             case 'uploadFile':
                 $controller = Routing::$routes[$path]["controller"];
                 $action = Routing::$routes[$path]["action"];

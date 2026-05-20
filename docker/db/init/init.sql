@@ -1,4 +1,6 @@
 DROP TABLE IF EXISTS character_field_values CASCADE;
+DROP TABLE IF EXISTS character_variant_field_values CASCADE;
+DROP TABLE IF EXISTS character_variants CASCADE;
 DROP TABLE IF EXISTS characters CASCADE;
 DROP TABLE IF EXISTS template_fields CASCADE;
 DROP TABLE IF EXISTS templates CASCADE;
@@ -60,11 +62,34 @@ CREATE TABLE character_field_values (
     UNIQUE (id_character, id_template_field)
 );
 
+CREATE TABLE character_variants (
+    id SERIAL PRIMARY KEY,
+    id_character INTEGER NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    image VARCHAR(255),
+    order_number INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_character) REFERENCES characters(id) ON DELETE CASCADE
+);
+
+CREATE TABLE character_variant_field_values (
+    id SERIAL PRIMARY KEY,
+    id_variant INTEGER NOT NULL,
+    id_template_field INTEGER NOT NULL,
+    value TEXT DEFAULT '',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_variant) REFERENCES character_variants(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_template_field) REFERENCES template_fields(id) ON DELETE CASCADE,
+    UNIQUE (id_variant, id_template_field)
+);
+
 CREATE INDEX idx_templates_id_user ON templates(id_user);
 CREATE INDEX idx_template_fields_id_template ON template_fields(id_template);
 CREATE INDEX idx_characters_id_user ON characters(id_user);
 CREATE INDEX idx_characters_id_template ON characters(id_template);
 CREATE INDEX idx_character_field_values_id_character ON character_field_values(id_character);
+CREATE INDEX idx_character_variants_id_character ON character_variants(id_character);
+CREATE INDEX idx_character_variant_field_values_id_variant ON character_variant_field_values(id_variant);
 
 INSERT INTO users (email, password, firstname, lastname, bio)
 VALUES (
@@ -102,3 +127,12 @@ VALUES
     (2, 1, 'Czlowiek'),
     (2, 2, 'Mag lodu'),
     (2, 3, 'Ambitny i zdystansowany.');
+
+INSERT INTO character_variants (id_character, name, image, order_number)
+VALUES
+    (2, 'Forma wilkolaka', NULL, 0);
+
+INSERT INTO character_variant_field_values (id_variant, id_template_field, value)
+VALUES
+    (1, 1, 'Wilkolak'),
+    (1, 2, 'Bestia lodu');

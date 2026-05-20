@@ -24,7 +24,8 @@ class CharacterRepository extends Repository
                 $char['description'],
                 $char['image'],
                 $char['id_user'],
-                $char['id']
+                $char['id'],
+                $char['id_template']
             );
         }
 
@@ -74,6 +75,31 @@ class CharacterRepository extends Repository
         );
     }
 
+    public function getCharacterByIdAndUserId(int $id, int $userId): ?Character
+    {
+        $stmt = $this->database->connect()->prepare('
+            SELECT * FROM characters WHERE id = :id AND id_user = :userId
+        ');
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $char = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if (!$char) {
+            return null;
+        }
+
+        return new Character(
+            $char['name'],
+            $char['description'],
+            $char['image'],
+            $char['id_user'],
+            $char['id'],
+            $char['id_template']
+        );
+    }
+
     public function updateCharacter(int $id, string $name, string $description, string $image, ?int $templateId): void
     {
         $stmt = $this->database->connect()->prepare('
@@ -102,6 +128,108 @@ class CharacterRepository extends Repository
             $mapped[$row['id_template_field']] = $row['value'];
         }
         
+        return $mapped;
+    }
+
+    public function getCharacterVariants(int $characterId): array
+    {
+        $stmt = $this->database->connect()->prepare('
+            SELECT * FROM character_variants
+            WHERE id_character = :characterId
+            ORDER BY order_number ASC, id ASC
+        ');
+        $stmt->bindParam(':characterId', $characterId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $variants = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        foreach ($variants as &$variant) {
+            $variant['values'] = $this->getVariantFieldValues((int)$variant['id']);
+        }
+
+        return $variants;
+    }
+
+    public function getCharacterVariant(int $variantId, int $characterId): ?array
+    {
+        $stmt = $this->database->connect()->prepare('
+            SELECT * FROM character_variants
+            WHERE id = :variantId AND id_character = :characterId
+        ');
+        $stmt->bindParam(':variantId', $variantId, PDO::PARAM_INT);
+        $stmt->bindParam(':characterId', $characterId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $variant = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$variant) {
+            return null;
+        }
+
+        $variant['values'] = $this->getVariantFieldValues((int)$variant['id']);
+        return $variant;
+    }
+
+    public function replaceCharacterVariants(int $characterId, array $variants): void
+    {
+        $db = $this->database->connect();
+        try {
+            $db->beginTransaction();
+
+            $stmtDel = $db->prepare('DELETE FROM character_variants WHERE id_character = ?');
+            $stmtDel->execute([$characterId]);
+
+            $stmtVariant = $db->prepare('
+                INSERT INTO character_variants (id_character, name, image, order_number)
+                VALUES (?, ?, ?, ?)
+                RETURNING id
+            ');
+            $stmtValue = $db->prepare('
+                INSERT INTO character_variant_field_values (id_variant, id_template_field, value)
+                VALUES (?, ?, ?)
+            ');
+
+            foreach ($variants as $index => $variant) {
+                $name = trim($variant['name'] ?? '');
+                if ($name === '') {
+                    continue;
+                }
+
+                $stmtVariant->execute([
+                    $characterId,
+                    $name,
+                    $variant['image'] ?? null,
+                    $index
+                ]);
+                $variantId = (int)$stmtVariant->fetchColumn();
+
+                foreach (($variant['values'] ?? []) as $fieldId => $value) {
+                    if ($value !== null && $value !== '') {
+                        $stmtValue->execute([$variantId, $fieldId, $value]);
+                    }
+                }
+            }
+
+            $db->commit();
+        } catch (Exception $e) {
+            $db->rollBack();
+            throw $e;
+        }
+    }
+
+    private function getVariantFieldValues(int $variantId): array
+    {
+        $stmt = $this->database->connect()->prepare('
+            SELECT id_template_field, value
+            FROM character_variant_field_values
+            WHERE id_variant = :variantId
+        ');
+        $stmt->bindParam(':variantId', $variantId, PDO::PARAM_INT);
+        $stmt->execute();
+
+        $mapped = [];
+        foreach ($stmt->fetchAll(PDO::FETCH_ASSOC) as $row) {
+            $mapped[$row['id_template_field']] = $row['value'];
+        }
+
         return $mapped;
     }
 

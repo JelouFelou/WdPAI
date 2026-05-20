@@ -95,6 +95,51 @@ class CharacterController extends AppController
         exit();
     }
 
+    public function viewCharacter()
+    {
+        $this->requireLogin();
+
+        $id = isset($_GET['id']) ? (int) $_GET['id'] : null;
+        if (!$id) {
+            header('Location: /dashboard');
+            exit();
+        }
+
+        $character = $this->characterRepository->getCharacterByIdAndUserId($id, $_SESSION['user_id']);
+        if (!$character) {
+            http_response_code(404);
+            header('Location: /dashboard');
+            exit();
+        }
+
+        $template = $character->getIdTemplate()
+            ? $this->templateRepository->getTemplate($character->getIdTemplate())
+            : null;
+        $fields = $character->getIdTemplate()
+            ? $this->templateRepository->getTemplateFields($character->getIdTemplate())
+            : [];
+        $values = $this->characterRepository->getCharacterFieldValues($character->getId());
+        $variants = $this->characterRepository->getCharacterVariants($character->getId());
+        $selectedVariant = null;
+        $variantId = isset($_GET['variant']) ? (int)$_GET['variant'] : null;
+        if ($variantId) {
+            $selectedVariant = $this->characterRepository->getCharacterVariant($variantId, $character->getId());
+            if ($selectedVariant) {
+                $values = array_replace($values, $selectedVariant['values']);
+            }
+        }
+
+        return $this->render('view_character', [
+            'title' => $character->getName() . ' - OCStudio',
+            'character' => $character,
+            'template' => $template,
+            'fields' => $fields,
+            'characterFieldValues' => $values,
+            'variants' => $variants,
+            'selectedVariant' => $selectedVariant
+        ]);
+    }
+
     public function editCharacter()
     {
         $this->requireLogin();
@@ -105,7 +150,7 @@ class CharacterController extends AppController
             exit();
         }
 
-        $character = $this->characterRepository->getCharacterById($id);
+        $character = $this->characterRepository->getCharacterByIdAndUserId($id, $_SESSION['user_id']);
 
         if (!$character) {
             header('Location: /dashboard');
@@ -136,18 +181,26 @@ class CharacterController extends AppController
                 $this->characterRepository->saveCharacterFieldValues($id, $_POST['field_values']);
             }
 
+            $this->characterRepository->replaceCharacterVariants($id, $this->prepareVariantsFromPost());
+
             header('Location: /dashboard');
             exit();
         }
 
         $templates       = $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']);
         $characterValues = $this->characterRepository->getCharacterFieldValues($character->getId());
+        $fields = $character->getIdTemplate()
+            ? $this->templateRepository->getTemplateFields($character->getIdTemplate())
+            : [];
+        $variants = $this->characterRepository->getCharacterVariants($character->getId());
 
         return $this->render('create_character', [
             'title'               => 'Edytuj postać - OCStudio',
             'character'           => $character,
             'templates'           => $templates,
-            'characterFieldValues' => $characterValues
+            'characterFieldValues' => $characterValues,
+            'fields'               => $fields,
+            'variants'             => $variants
         ]);
     }
 
@@ -160,5 +213,55 @@ class CharacterController extends AppController
 
         $uploaded = (new ImageUploadService())->upload($file);
         return $uploaded['filename'];
+    }
+
+    private function prepareVariantsFromPost(): array
+    {
+        $postedVariants = $_POST['variants'] ?? [];
+        if (!is_array($postedVariants)) {
+            return [];
+        }
+
+        $variants = [];
+        foreach ($postedVariants as $key => $variant) {
+            if (!is_array($variant)) {
+                continue;
+            }
+
+            $name = trim($variant['name'] ?? '');
+            if ($name === '') {
+                continue;
+            }
+
+            $image = $variant['existing_image'] ?? null;
+            $file = $this->getVariantUploadFile((string)$key);
+            if ($file && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
+                $uploaded = (new ImageUploadService())->upload($file);
+                $image = $uploaded['filename'];
+            }
+
+            $variants[] = [
+                'name' => $name,
+                'image' => $image ?: null,
+                'values' => is_array($variant['values'] ?? null) ? $variant['values'] : []
+            ];
+        }
+
+        return $variants;
+    }
+
+    private function getVariantUploadFile(string $key): ?array
+    {
+        if (!isset($_FILES['variant_images']['name'][$key])) {
+            return null;
+        }
+
+        return [
+            'name' => $_FILES['variant_images']['name'][$key],
+            'type' => $_FILES['variant_images']['type'][$key],
+            'tmp_name' => $_FILES['variant_images']['tmp_name'][$key],
+            'error' => $_FILES['variant_images']['error'][$key],
+            'size' => $_FILES['variant_images']['size'][$key],
+        ];
     }
 }

@@ -52,11 +52,16 @@
 
         <?php if(isset($characters) && is_array($characters)): ?>
         <?php foreach ($characters as $char): ?>
-        <div class="character-card" onclick="window.location.href='/editCharacter?id=<?= $char->getId(); ?>'"
+        <div class="character-card" onclick="window.location.href='/viewCharacter?id=<?= $char->getId(); ?>'"
             style="cursor: pointer;">
             <div class="card-image-wrapper">
                 <?php $img = $char->getImage() ?: 'default_avatar.png'; ?>
                 <img src="public/uploads/<?= $img ?>" alt="Character">
+                <button class="card-edit-btn"
+                    onclick="event.stopPropagation(); window.location.href='/editCharacter?id=<?= $char->getId(); ?>'"
+                    title="Edytuj">
+                    <i class="fa-solid fa-pen"></i>
+                </button>
                 <div class="card-content">
                     <h3>
                         <?= $char->getName(); ?>

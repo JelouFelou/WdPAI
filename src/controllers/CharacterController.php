@@ -3,6 +3,7 @@
 require_once 'AppController.php';
 require_once __DIR__ . '/../repositories/CharacterRepository.php';
 require_once __DIR__ . '/../repositories/TemplateRepository.php';
+require_once __DIR__ . '/../services/ImageUploadService.php';
 
 class CharacterController extends AppController
 {
@@ -36,9 +37,23 @@ class CharacterController extends AppController
             $description = $_POST['character_description'] ?? '';
             $templateId  = $this->parseTemplateId($_POST['template_id'] ?? null);
             $userId      = $_SESSION['user_id'];
-            $image       = 'default.jpg';
 
-            $this->characterRepository->addCharacter($name, $description, $image, $userId, $templateId);
+            try {
+                $image = $this->uploadCharacterImage('default.jpg');
+            } catch (Throwable $e) {
+                http_response_code(($e->getCode() >= 400 && $e->getCode() <= 599) ? $e->getCode() : 400);
+                return $this->render('create_character', [
+                    'title' => 'Stworz postac - OCStudio',
+                    'templates' => $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']),
+                    'messages' => [$e->getMessage()]
+                ]);
+            }
+
+            $characterId = $this->characterRepository->addCharacter($name, $description, $image, $userId, $templateId);
+
+            if (isset($_POST['field_values']) && is_array($_POST['field_values'])) {
+                $this->characterRepository->saveCharacterFieldValues($characterId, $_POST['field_values']);
+            }
 
             header('Location: /dashboard');
             exit();
@@ -101,7 +116,19 @@ class CharacterController extends AppController
             $name        = $_POST['character_name']        ?? '';
             $description = $_POST['character_description'] ?? '';
             $templateId  = $this->parseTemplateId($_POST['template_id'] ?? null);
-            $image       = $character->getImage() ?: 'default.jpg';
+
+            try {
+                $image = $this->uploadCharacterImage($character->getImage() ?: 'default.jpg');
+            } catch (Throwable $e) {
+                http_response_code(($e->getCode() >= 400 && $e->getCode() <= 599) ? $e->getCode() : 400);
+                return $this->render('create_character', [
+                    'title' => 'Edytuj postac - OCStudio',
+                    'character' => $character,
+                    'templates' => $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']),
+                    'characterFieldValues' => $this->characterRepository->getCharacterFieldValues($character->getId()),
+                    'messages' => [$e->getMessage()]
+                ]);
+            }
 
             $this->characterRepository->updateCharacter($id, $name, $description, $image, $templateId);
 
@@ -122,5 +149,16 @@ class CharacterController extends AppController
             'templates'           => $templates,
             'characterFieldValues' => $characterValues
         ]);
+    }
+
+    private function uploadCharacterImage(string $fallback): string
+    {
+        $file = $_FILES['character_image'] ?? null;
+        if (!$file || ($file['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE) {
+            return $fallback;
+        }
+
+        $uploaded = (new ImageUploadService())->upload($file);
+        return $uploaded['filename'];
     }
 }

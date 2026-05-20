@@ -31,6 +31,9 @@ services:
       dockerfile: docker/php/Dockerfile
     volumes:
       - .:/app
+    environment:
+      CLOUDFLARE_TURNSTILE_SITE_KEY: "0x4AAAAAADTOGLLFcA91aIbA"
+      CLOUDFLARE_TURNSTILE_SECRET: "0x4AAAAAADTOGEIOm5faHPLHEChJJ_mZGUc"
     networks:
       - pg-network
   

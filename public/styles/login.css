@@ -72,6 +72,11 @@
     border-color: var(--primary);
 }
 
+.input-group input.no-valid {
+    border-color: #d93025;
+    background-color: #fff6f5;
+}
+
 .auth-options {
     display: flex;
     justify-content: space-between;

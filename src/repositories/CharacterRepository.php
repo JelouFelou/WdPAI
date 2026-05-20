@@ -31,11 +31,12 @@ class CharacterRepository extends Repository
         return $result;
     }
 
-    public function addCharacter(string $name, string $description, string $image, int $userId, int $templateId): void
+    public function addCharacter(string $name, string $description, string $image, int $userId, ?int $templateId): int
     {
         $stmt = $this->database->connect()->prepare('
         INSERT INTO characters (name, description, image, id_user, id_template)
         VALUES (?, ?, ?, ?, ?)
+        RETURNING id
     ');
 
         $stmt->execute([
@@ -45,6 +46,8 @@ class CharacterRepository extends Repository
             $userId,
             $templateId
         ]);
+
+        return (int)$stmt->fetchColumn();
     }
 
     public function getCharacterById(int $id): ?Character

@@ -4,6 +4,7 @@ require_once 'src/controllers/SecurityController.php';
 require_once 'src/controllers/DashboardController.php';
 require_once 'src/controllers/TemplateController.php';
 require_once 'src/controllers/CharacterController.php';
+require_once 'src/controllers/FileController.php';
 class Routing
 {
 
@@ -56,6 +57,10 @@ class Routing
             'controller' => 'CharacterController',
             'action' => 'editCharacter'
         ],
+        'uploadFile' => [
+            'controller' => 'FileController',
+            'action' => 'uploadFile'
+        ],
     ];
 
     public static function run(string $path)
@@ -75,6 +80,7 @@ class Routing
             case 'createCharacter':
             case 'getTemplateData':
             case 'editCharacter':
+            case 'uploadFile':
                 $controller = Routing::$routes[$path]["controller"];
                 $action = Routing::$routes[$path]["action"];
 
@@ -86,6 +92,7 @@ class Routing
                 $actionKey = $urlParts[0]; // To przekazujemy do switcha
                 break;
             default:
+                http_response_code(404);
                 include 'public/views/404.html';
                 break;
         }

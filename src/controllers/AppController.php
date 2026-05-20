@@ -14,7 +14,12 @@ class AppController {
     protected function requireLogin()
     {
         if (!isset($_SESSION['user_id'])) {
-            $url = "http://$_SERVER[HTTP_HOST]";
+            http_response_code(401);
+            $scheme = (
+                (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ||
+                (($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '') === 'https')
+            ) ? 'https' : 'http';
+            $url = "{$scheme}://$_SERVER[HTTP_HOST]";
             header("Location: {$url}/login");
             exit();
         }

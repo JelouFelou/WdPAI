@@ -1,9 +1,11 @@
 <div class="content-view">
     <section class="welcome-section">
-        <div class="grid-controls">
-            <span>Widok: </span>
-            <input type="range" id="column-slider" min="3" max="10" value="4">
-            <span id="column-count">4</span>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div>
+                <h1 style="margin:0;font-size:1.4rem;">Dashboard</h1>
+                <p style="margin:6px 0 0;color:var(--text-muted,#777);">Pierwsze 4 postacie. Pełna lista i zarządzanie folderami w zakładce Postacie.</p>
+            </div>
+            <a href="/characters" class="btn-primary" style="padding:10px 18px;font-size:0.95rem;">Przejdź do Postacie</a>
         </div>
     </section>
 
@@ -37,44 +39,37 @@
     </div>
 
     <div class="dashboard-grid">
-        <div class="character-card add-card-wrapper" onclick="window.location.href='/createCharacter'"
-            style="cursor: pointer;">
-            <div class="card-image-wrapper add-card-trigger">
-                <div class="add-content-placeholder">
-                    <i class="fa-solid fa-plus"></i>
-                </div>
-            </div>
-            <div class="card-content">
-                <h3>Dodaj nową</h3>
-                <p>Stwórz kolejnego bohatera</p>
-            </div>
-        </div>
-
         <?php if(isset($characters) && is_array($characters)): ?>
-        <?php foreach ($characters as $char): ?>
-        <div class="character-card" onclick="window.location.href='/viewCharacter?id=<?= $char->getId(); ?>'"
-            style="cursor: pointer;">
-            <div class="card-image-wrapper">
-                <?php $img = $char->getImage() ?: 'default_avatar.png'; ?>
-                <img src="public/uploads/<?= $img ?>" alt="Character">
-                <button class="card-edit-btn"
-                    onclick="event.stopPropagation(); window.location.href='/editCharacter?id=<?= $char->getId(); ?>'"
-                    title="Edytuj">
-                    <i class="fa-solid fa-pen"></i>
-                </button>
-                <div class="card-content">
-                    <h3>
-                        <?= $char->getName(); ?>
-                    </h3>
-                    <p>
-                        <?= $char->getDescription(); ?>
-                    </p>
+            <?php foreach (array_slice($characters, 0, 4) as $char): ?>
+                <div class="character-card" onclick="window.location.href='/viewCharacter?id=<?= $char->getId(); ?>'"
+                    style="cursor: pointer;">
+                    <div class="card-image-wrapper">
+                        <?php $img = $char->getImage() ?: 'default_avatar.png'; ?>
+                        <img src="public/uploads/<?= $img ?>" alt="Character">
+                        <button class="card-edit-btn"
+                            onclick="event.stopPropagation(); window.location.href='/editCharacter?id=<?= $char->getId(); ?>'"
+                            title="Edytuj">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <div class="card-content">
+                            <h3>
+                                <?= $char->getName(); ?>
+                            </h3>
+                            <p>
+                                <?= $char->getDescription(); ?>
+                            </p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        <?php endforeach; ?>
+            <?php endforeach; ?>
         <?php endif; ?>
     </div>
+
+    <?php if(isset($characters) && count($characters) > 4): ?>
+        <div style="text-align:center;margin-top:20px;">
+            <a href="/characters" class="btn-secondary" style="padding:10px 20px;">Pokaż wszystkie postacie</a>
+        </div>
+    <?php endif; ?>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {

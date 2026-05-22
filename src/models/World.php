@@ -1,29 +1,26 @@
 <?php
 
-class Character {
+class World {
     private $id;
     private $name;
     private $description;
     private $image;
     private $id_user;
-    private $id_template; // Dodajemy pole, jeśli przechowujesz je w bazie
-    private $id_world;
+    private $parent_id;
 
-    public function __construct($name, $description, $image, $id_user, $id = null, $id_template = null, $id_world = null) {
+    public function __construct(string $name, string $description, string $image, int $id_user, ?int $id = null, ?int $parent_id = null) {
         $this->name = $name;
         $this->description = $description;
         $this->image = $image;
         $this->id_user = $id_user;
         $this->id = $id;
-        $this->id_template = $id_template;
-        $this->id_world = $id_world;
+        $this->parent_id = $parent_id;
     }
 
+    public function getId(): ?int { return $this->id; }
     public function getName(): string { return $this->name; }
     public function getDescription(): string { return $this->description; }
     public function getImage(): string { return $this->image; }
-    public function getId(): ?int { return $this->id; }
     public function getIdUser(): int { return $this->id_user; }
-    public function getIdTemplate(): ?int { return $this->id_template; } // Ważne: dodaj ten getter
-    public function getIdWorld(): ?int { return $this->id_world; }
+    public function getParentId(): ?int { return $this->parent_id; }
 }

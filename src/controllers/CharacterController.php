@@ -3,17 +3,20 @@
 require_once 'AppController.php';
 require_once __DIR__ . '/../repositories/CharacterRepository.php';
 require_once __DIR__ . '/../repositories/TemplateRepository.php';
+require_once __DIR__ . '/../repositories/WorldRepository.php';
 require_once __DIR__ . '/../services/ImageUploadService.php';
 
 class CharacterController extends AppController
 {
     private $characterRepository;
     private $templateRepository;
+    private $worldRepository;
 
     public function __construct()
     {
         $this->characterRepository = new CharacterRepository();
         $this->templateRepository  = new TemplateRepository();
+        $this->worldRepository     = new WorldRepository();
     }
 
     /**
@@ -27,6 +30,142 @@ class CharacterController extends AppController
         $int = (int) $raw;
         return $int > 0 ? $int : null;
     }
+
+    // -----------------------------------------------------------------------
+    //  Widok "Postacie" – nawigacja jak Dysk Google
+    // -----------------------------------------------------------------------
+
+    public function characters()
+    {
+        $this->requireLogin();
+        $userId = $_SESSION['user_id'];
+
+        // Aktualny folder; null = folder główny
+        $worldId = isset($_GET['world']) ? (int)$_GET['world'] : null;
+
+        // Sprawdź czy folder należy do użytkownika (tylko gdy nie-root)
+        $currentWorld = null;
+        if ($worldId !== null) {
+            $currentWorld = $this->worldRepository->getWorldByIdAndUserId($worldId, $userId);
+            if (!$currentWorld) {
+                // Folder nie istnieje lub nie należy do usera – wróć do root
+                header('Location: /characters');
+                exit();
+            }
+        }
+
+        // Podfoldery aktualnego folderu
+        $subfolders = $this->worldRepository->getChildWorlds($userId, $worldId);
+
+        // Postacie w aktualnym folderze
+        $characters = $this->characterRepository->getCharactersByWorld($userId, $worldId);
+
+        // Breadcrumb (pusta tablica gdy jesteśmy w root)
+        $breadcrumb = $worldId !== null
+            ? $this->worldRepository->getBreadcrumb($worldId, $userId)
+            : [];
+
+        return $this->render('characters', [
+            'title'        => 'Postacie - OCStudio',
+            'characters'   => $characters,
+            'subfolders'   => $subfolders,
+            'currentWorld' => $currentWorld,
+            'breadcrumb'   => $breadcrumb,
+        ]);
+    }
+
+    // -----------------------------------------------------------------------
+    //  API: utwórz folder (world)
+    // -----------------------------------------------------------------------
+
+    public function createWorld()
+    {
+        $this->requireLogin();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            exit();
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input || !isset($input['name']) || trim($input['name']) === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Brak nazwy folderu']);
+            exit();
+        }
+
+        $name     = trim($input['name']);
+        $parentId = isset($input['parentId']) ? (int)$input['parentId'] : null;
+        if ($parentId === 0) {
+            $parentId = null;
+        }
+
+        // Sprawdź czy parent należy do usera
+        if ($parentId !== null) {
+            $parent = $this->worldRepository->getWorldByIdAndUserId($parentId, $_SESSION['user_id']);
+            if (!$parent) {
+                http_response_code(403);
+                echo json_encode(['error' => 'Nieprawidłowy folder nadrzędny']);
+                exit();
+            }
+        }
+
+        $worldId = $this->worldRepository->addWorld($name, '', $_SESSION['user_id'], $parentId);
+
+        echo json_encode(['success' => true, 'id' => $worldId, 'name' => $name]);
+        exit();
+    }
+
+    // -----------------------------------------------------------------------
+    //  API: przypisz postać do folderu
+    // -----------------------------------------------------------------------
+
+    public function assignCharacterToWorld()
+    {
+        $this->requireLogin();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            exit();
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        if (!$input || !array_key_exists('characterId', $input) || !array_key_exists('worldId', $input)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Brak wymaganych parametrów']);
+            exit();
+        }
+
+        $characterId = (int) $input['characterId'];
+        $worldId     = $input['worldId'] === null ? null : (int) $input['worldId'];
+
+        $character = $this->characterRepository->getCharacterByIdAndUserId($characterId, $_SESSION['user_id']);
+        if (!$character) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Postać nie znaleziona']);
+            exit();
+        }
+
+        $this->characterRepository->updateCharacter(
+            $characterId,
+            $character->getName(),
+            $character->getDescription(),
+            $character->getImage(),
+            $character->getIdTemplate(),
+            $worldId
+        );
+
+        echo json_encode(['success' => true]);
+        exit();
+    }
+
+    // -----------------------------------------------------------------------
+    //  Pozostałe akcje (niezmienione)
+    // -----------------------------------------------------------------------
 
     public function createCharacter()
     {
@@ -43,13 +182,14 @@ class CharacterController extends AppController
             } catch (Throwable $e) {
                 http_response_code(($e->getCode() >= 400 && $e->getCode() <= 599) ? $e->getCode() : 400);
                 return $this->render('create_character', [
-                    'title' => 'Stworz postac - OCStudio',
+                    'title'     => 'Stworz postac - OCStudio',
                     'templates' => $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']),
-                    'messages' => [$e->getMessage()]
+                    'messages'  => [$e->getMessage()]
                 ]);
             }
 
-            $characterId = $this->characterRepository->addCharacter($name, $description, $image, $userId, $templateId);
+            $worldId     = isset($_POST['world_id']) ? (int) $_POST['world_id'] : null;
+            $characterId = $this->characterRepository->addCharacter($name, $description, $image, $userId, $templateId, $worldId);
 
             if (isset($_POST['field_values']) && is_array($_POST['field_values'])) {
                 $this->characterRepository->saveCharacterFieldValues($characterId, $_POST['field_values']);
@@ -118,8 +258,9 @@ class CharacterController extends AppController
         $fields = $character->getIdTemplate()
             ? $this->templateRepository->getTemplateFields($character->getIdTemplate())
             : [];
-        $values = $this->characterRepository->getCharacterFieldValues($character->getId());
+        $values   = $this->characterRepository->getCharacterFieldValues($character->getId());
         $variants = $this->characterRepository->getCharacterVariants($character->getId());
+
         $selectedVariant = null;
         $variantId = isset($_GET['variant']) ? (int)$_GET['variant'] : null;
         if ($variantId) {
@@ -130,13 +271,13 @@ class CharacterController extends AppController
         }
 
         return $this->render('view_character', [
-            'title' => $character->getName() . ' - OCStudio',
-            'character' => $character,
-            'template' => $template,
-            'fields' => $fields,
+            'title'               => $character->getName() . ' - OCStudio',
+            'character'           => $character,
+            'template'            => $template,
+            'fields'              => $fields,
             'characterFieldValues' => $values,
-            'variants' => $variants,
-            'selectedVariant' => $selectedVariant
+            'variants'            => $variants,
+            'selectedVariant'     => $selectedVariant
         ]);
     }
 
@@ -151,7 +292,6 @@ class CharacterController extends AppController
         }
 
         $character = $this->characterRepository->getCharacterByIdAndUserId($id, $_SESSION['user_id']);
-
         if (!$character) {
             header('Location: /dashboard');
             exit();
@@ -167,11 +307,11 @@ class CharacterController extends AppController
             } catch (Throwable $e) {
                 http_response_code(($e->getCode() >= 400 && $e->getCode() <= 599) ? $e->getCode() : 400);
                 return $this->render('create_character', [
-                    'title' => 'Edytuj postac - OCStudio',
-                    'character' => $character,
-                    'templates' => $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']),
+                    'title'               => 'Edytuj postac - OCStudio',
+                    'character'           => $character,
+                    'templates'           => $this->templateRepository->getTemplatesByUserId($_SESSION['user_id']),
                     'characterFieldValues' => $this->characterRepository->getCharacterFieldValues($character->getId()),
-                    'messages' => [$e->getMessage()]
+                    'messages'            => [$e->getMessage()]
                 ]);
             }
 
@@ -234,15 +374,15 @@ class CharacterController extends AppController
             }
 
             $image = $variant['existing_image'] ?? null;
-            $file = $this->getVariantUploadFile((string)$key);
+            $file  = $this->getVariantUploadFile((string)$key);
             if ($file && ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
                 $uploaded = (new ImageUploadService())->upload($file);
-                $image = $uploaded['filename'];
+                $image    = $uploaded['filename'];
             }
 
             $variants[] = [
-                'name' => $name,
-                'image' => $image ?: null,
+                'name'   => $name,
+                'image'  => $image ?: null,
                 'values' => is_array($variant['values'] ?? null) ? $variant['values'] : []
             ];
         }
@@ -257,11 +397,11 @@ class CharacterController extends AppController
         }
 
         return [
-            'name' => $_FILES['variant_images']['name'][$key],
-            'type' => $_FILES['variant_images']['type'][$key],
+            'name'     => $_FILES['variant_images']['name'][$key],
+            'type'     => $_FILES['variant_images']['type'][$key],
             'tmp_name' => $_FILES['variant_images']['tmp_name'][$key],
-            'error' => $_FILES['variant_images']['error'][$key],
-            'size' => $_FILES['variant_images']['size'][$key],
+            'error'    => $_FILES['variant_images']['error'][$key],
+            'size'     => $_FILES['variant_images']['size'][$key],
         ];
     }
 }

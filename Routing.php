@@ -5,9 +5,9 @@ require_once 'src/controllers/DashboardController.php';
 require_once 'src/controllers/TemplateController.php';
 require_once 'src/controllers/CharacterController.php';
 require_once 'src/controllers/FileController.php';
+
 class Routing
 {
-
     public static $routes = [
         "login" => [
             "controller" => "SecurityController",
@@ -65,41 +65,37 @@ class Routing
             'controller' => 'FileController',
             'action' => 'uploadFile'
         ],
+        // --- Postacie / foldery ---
+        'characters' => [
+            'controller' => 'CharacterController',
+            'action' => 'characters'
+        ],
+        'api/worlds' => [
+            'controller' => 'CharacterController',
+            'action' => 'createWorld'
+        ],
+        'api/worlds/assign' => [
+            'controller' => 'CharacterController',
+            'action' => 'assignCharacterToWorld'
+        ],
+        'api/characters/assign' => [
+            'controller' => 'CharacterController',
+            'action' => 'assignCharacterToWorld'
+        ],
     ];
 
     public static function run(string $path)
     {
-        // TODO sprawdzać za pomoca array_key_exists
-        switch ($path) {
-            case 'dashboard':
-            case '':
-            case 'index':
-            case 'register':
-            case 'login':
-            case 'templates':
-            case 'createTemplate':
-            case 'deleteTemplate':
-            case 'duplicateTemplate':
-            case 'editTemplate':
-            case 'createCharacter':
-            case 'getTemplateData':
-            case 'editCharacter':
-            case 'viewCharacter':
-            case 'uploadFile':
-                $controller = Routing::$routes[$path]["controller"];
-                $action = Routing::$routes[$path]["action"];
+        if (array_key_exists($path, self::$routes)) {
+            $controller = self::$routes[$path]["controller"];
+            $action     = self::$routes[$path]["action"];
 
-                $controllerObj = new $controller;
-                $id = null;
-
-                $controllerObj->$action($id);
-                $urlParts = explode("?", $path);
-                $actionKey = $urlParts[0]; // To przekazujemy do switcha
-                break;
-            default:
-                http_response_code(404);
-                include 'public/views/404.html';
-                break;
+            $controllerObj = new $controller;
+            $controllerObj->$action();
+            return;
         }
+
+        http_response_code(404);
+        include 'public/views/404.html';
     }
 }

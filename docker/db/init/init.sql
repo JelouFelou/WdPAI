@@ -39,6 +39,18 @@ CREATE TABLE template_fields (
     FOREIGN KEY (id_template) REFERENCES templates(id) ON DELETE CASCADE
 );
 
+CREATE TABLE worlds (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT DEFAULT '',
+    image VARCHAR(255) DEFAULT 'default.jpg',
+    id_user INTEGER NOT NULL,
+    parent_id INTEGER DEFAULT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (parent_id) REFERENCES worlds(id) ON DELETE CASCADE
+);
+
 CREATE TABLE characters (
     id SERIAL PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -46,9 +58,11 @@ CREATE TABLE characters (
     image VARCHAR(255) DEFAULT 'default.jpg',
     id_user INTEGER NOT NULL,
     id_template INTEGER,
+    id_world INTEGER DEFAULT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_user) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (id_template) REFERENCES templates(id) ON DELETE SET NULL
+    FOREIGN KEY (id_template) REFERENCES templates(id) ON DELETE SET NULL,
+    FOREIGN KEY (id_world) REFERENCES worlds(id) ON DELETE SET NULL
 );
 
 CREATE TABLE character_field_values (

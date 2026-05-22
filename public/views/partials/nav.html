@@ -1,26 +1,32 @@
 <!-- Otwieramy główne kontenery układu -->
 <div class="base-container">
     <nav class="sidebar">
-        <div class="sidebar-top">
+        <?php
+    $currentPath = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
+    if ($currentPath === '') {
+        $currentPath = 'dashboard';
+    }
+?>
+<div class="sidebar-top">
             <div class="logo-container">
                 <span class="logo-text">OC<span>Studio</span></span>
             </div>
             
             <ul class="nav-menu">
                 <li>
-                    <a href="dashboard" class="active">
+                    <a href="/dashboard" class="<?= $currentPath === 'dashboard' ? 'active' : '' ?>">
                         <i class="fa-solid fa-house"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
                 <li>
-                    <a href="#">
+                    <a href="/characters" class="<?= $currentPath === 'characters' ? 'active' : '' ?>">
                         <i class="fa-solid fa-users"></i>
                         <span>Postacie</span>
                     </a>
                 </li>
                 <li>
-                    <a href="templates">
+                    <a href="/templates" class="<?= $currentPath === 'templates' ? 'active' : '' ?>">
                         <i class="fa-solid fa-layer-group"></i>
                         <span>Szablony</span>
                     </a>
@@ -28,18 +34,12 @@
             </ul>
 
             <div class="sidebar-section">
-                <span class="section-title">TWOJE POSTACIE</span>
+                <span class="section-title">TWOJE ŚWIATY</span>
                 <ul class="nav-menu characters-list">
                     <li>
-                        <a href="#">
-                            <div class="char-avatar-mini"></div>
-                            <span>Alysia Thorne</span>
-                        </a>
-                    </li>
-                    <li>
-                        <a href="#">
-                            <div class="char-avatar-mini"></div>
-                            <span>Kaelen Vance</span>
+                        <a href="characters">
+                            <div class="char-avatar-mini">Ś</div>
+                            <span>Świat główny</span>
                         </a>
                     </li>
                 </ul>

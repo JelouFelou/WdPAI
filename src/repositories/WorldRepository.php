@@ -96,14 +96,29 @@ class WorldRepository extends Repository
      */
     public function searchWorldsByName(int $userId, string $q): array
     {
-        $stmt = $this->database->connect()->prepare('
-            SELECT * FROM worlds
-            WHERE id_user = :userId AND LOWER(name) LIKE :q
-            ORDER BY name ASC
-            LIMIT 5
-        ');
-        $stmt->bindParam(':userId', $userId, PDO::PARAM_INT);
-        $stmt->bindValue(':q', '%' . mb_strtolower($q) . '%');
+        $tokens = preg_split('/\s+/', trim($q));
+        $clauses = [];
+        $params = [':userId' => $userId];
+
+        foreach ($tokens as $i => $token) {
+            if ($token === '') {
+                continue;
+            }
+            $key = ':q' . $i;
+            $clauses[] = 'LOWER(name) LIKE ' . $key;
+            $params[$key] = '%' . mb_strtolower($token) . '%';
+        }
+
+        $sql = 'SELECT * FROM worlds WHERE id_user = :userId';
+        if (!empty($clauses)) {
+            $sql .= ' AND ' . implode(' AND ', $clauses);
+        }
+        $sql .= ' ORDER BY name ASC LIMIT 5';
+
+        $stmt = $this->database->connect()->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
         $stmt->execute();
 
         $result = [];
@@ -157,5 +172,41 @@ class WorldRepository extends Repository
             'UPDATE worlds SET status_id = ? WHERE id = ?'
         );
         $stmt->execute([$statusId, $worldId]);
+    }
+
+    public function updateWorldName(int $worldId, int $userId, string $name): void
+    {
+        $stmt = $this->database->connect()->prepare(
+            'UPDATE worlds SET name = :name WHERE id = :id AND id_user = :userId'
+        );
+        $stmt->bindValue(':name', $name);
+        $stmt->bindValue(':id', $worldId, PDO::PARAM_INT);
+        $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+    }
+
+    public function moveCharactersFromWorldsToRoot(int $userId, array $worldIds): void
+    {
+        if (empty($worldIds)) {
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($worldIds), '?'));
+        $stmt = $this->database->connect()->prepare("
+            UPDATE characters
+            SET id_world = NULL
+            WHERE id_user = ? AND id_world IN ($placeholders)
+        ");
+        $stmt->execute(array_merge([$userId], array_map('intval', $worldIds)));
+    }
+
+    public function deleteWorld(int $worldId, int $userId): void
+    {
+        $stmt = $this->database->connect()->prepare(
+            'DELETE FROM worlds WHERE id = :id AND id_user = :userId'
+        );
+        $stmt->bindValue(':id', $worldId, PDO::PARAM_INT);
+        $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+        $stmt->execute();
     }
 }

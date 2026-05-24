@@ -1,0 +1,137 @@
+<?php
+/**
+ * Partial: character-card-block.html
+ * 
+ * Uniwersalny blok karty postaci używany w dashboard.html i characters.html
+ * 
+ * Wymagane zmienne:
+ *   - $char           : Character obiekt
+ *   - $statuses       : Array statusów (z getIdStatus na obiekcie Character)
+ * 
+ * Opcjonalne zmienne:
+ *   - $isDraggable    : bool (default: false) - czy karta ma być draggable
+ *   - $showAddStatusBtn: bool (default: false) - czy pokazywać przycisk + do dodania statusu
+ *   - $showFilters    : bool (default: false) - czy pokazywać sekcję filtrów
+ */
+
+// Parametry domyślne
+$isDraggable     = $isDraggable ?? false;
+$showAddStatusBtn = $showAddStatusBtn ?? false;
+$showFilters     = $showFilters ?? false;
+$showEditButton  = $showEditButton ?? true;
+$showCharacterActions = $showCharacterActions ?? false;
+$defaultCharacterImage = (($userSettings['theme'] ?? 'light') === 'dark') ? 'default_dark.png' : 'default.png';
+
+// Przygotuj dane obrazka
+$img        = $char->getImage() ?: 'default.png';
+$noImage    = in_array($img, ['default.png', 'default.jpg', '']);
+$displayImg = $noImage ? $defaultCharacterImage : $img;
+$noTemplate = $char->getIdTemplate() === null;
+
+// Oblicz poziom gotowości
+if (!$noImage && !$noTemplate) {
+    $readiness      = 'done';
+    $readinessLabel = 'Gotowa';
+    $readinessIcon  = 'fa-circle-check';
+} elseif ($noImage && $noTemplate) {
+    $readiness      = 'todo';
+    $readinessLabel = 'Do zrobienia';
+    $readinessIcon  = 'fa-circle-xmark';
+} else {
+    $readiness      = 'wip';
+    $readinessLabel = 'W trakcie';
+    $readinessIcon  = 'fa-circle-half-stroke';
+}
+
+// Znajdź status po ID
+$statusObj = null;
+if (isset($statuses) && $char->getIdStatus()) {
+    foreach ($statuses as $s) {
+        if ($s->getId() === $char->getIdStatus()) {
+            $statusObj = $s;
+            break;
+        }
+    }
+}
+?>
+
+<div class="character-card"
+     <?php if ($isDraggable): ?>draggable="true" data-character-id="<?= $char->getId() ?>" data-name="<?= htmlspecialchars(strtolower($char->getName()), ENT_QUOTES, 'UTF-8') ?>"<?php endif; ?>
+     data-character-name="<?= htmlspecialchars($char->getName(), ENT_QUOTES, 'UTF-8') ?>"
+     onclick="window.location.href='/viewCharacter?id=<?= $char->getId() ?>'"
+     style="cursor:<?= $isDraggable ? 'grab' : 'pointer' ?>;position:relative;">
+    
+    <!-- Status badge (top-left) lub add status button -->
+    <?php if ($char->getIdStatus()): 
+        if ($statusObj):
+    ?>
+        <div class="status-badge" 
+             data-character-id="<?= $char->getId() ?>"
+             data-status-id="<?= $statusObj->getId() ?>"
+             <?php if ($showAddStatusBtn): ?>onclick="event.stopPropagation(); openStatusModal(<?= $char->getId() ?>)"<?php endif; ?>
+             style="position:absolute;top:8px;left:8px;height:auto;padding:4px 8px;border-radius:50px;<?php if ($showAddStatusBtn): ?>cursor:pointer;<?php endif; ?>display:flex;align-items:center;justify-content:center;font-size:0.7rem;z-index:2;transition:transform .2s,box-shadow .2s;background:<?= htmlspecialchars($statusObj->getColorHex(), ENT_QUOTES, 'UTF-8') ?>;color:white;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,0.2);text-align:center;white-space:nowrap;"
+             title="<?= htmlspecialchars($statusObj->getName(), ENT_QUOTES, 'UTF-8') ?>">
+            <?= htmlspecialchars($statusObj->getName(), ENT_QUOTES, 'UTF-8') ?>
+        </div>
+    <?php 
+        endif;
+    elseif ($showAddStatusBtn): ?>
+        <button class="add-status-btn"
+                data-character-id="<?= $char->getId() ?>"
+                onclick="event.stopPropagation(); openStatusModal(<?= $char->getId() ?>)"
+            style="position:absolute;top:8px;left:8px;width:40px;height:40px;border-radius:50%;background:white;border:2px dashed var(--border,#ddd);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.2rem;z-index:2;transition:all .2s;color:var(--text-muted);"
+                title="Dodaj status">
+            +
+        </button>
+    <?php else: ?>
+        <!-- Readiness badge (top-left) jeśli brak statusu i nie pokazujemy add-btn -->
+           <div class="readiness-badge <?= $readiness ?>"
+               style="position:absolute;top:8px;left:8px;display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:999px;font-size:0.65rem;font-weight:700;color:#fff;z-index:2;box-shadow:0 2px 6px rgba(0,0,0,.18);pointer-events:none;white-space:nowrap;"
+             title="<?= htmlspecialchars($readinessLabel, ENT_QUOTES, 'UTF-8') ?>">
+            <i class="fa-solid <?= $readinessIcon ?>"></i>
+            <?= htmlspecialchars($readinessLabel, ENT_QUOTES, 'UTF-8') ?>
+        </div>
+    <?php endif; ?>
+    
+    <div class="card-image-wrapper">
+        <img src="public/uploads/<?= htmlspecialchars($displayImg, ENT_QUOTES, 'UTF-8') ?>"
+             alt="Postać"
+             onerror="this.src='public/uploads/<?= htmlspecialchars($defaultCharacterImage, ENT_QUOTES, 'UTF-8') ?>'">
+        <?php if ($showEditButton): ?>
+            <button class="card-edit-btn"
+                    onclick="event.stopPropagation(); window.location.href='/editCharacter?id=<?= $char->getId() ?>'"
+                    title="Edytuj">
+                <i class="fa-solid fa-pen"></i>
+            </button>
+        <?php endif; ?>
+        <?php if ($showCharacterActions): ?>
+            <div class="card-action-stack">
+                <button type="button"
+                        class="card-action-btn"
+                        onclick="event.stopPropagation(); duplicateCharacter(<?= (int)$char->getId() ?>)"
+                        title="Duplikuj">
+                    <i class="fa-solid fa-copy"></i>
+                </button>
+                <button type="button"
+                        class="card-action-btn danger"
+                        onclick="event.stopPropagation(); deleteCharacterWithConfirm(<?= (int)$char->getId() ?>, this.closest('.character-card').dataset.characterName || '')"
+                        title="Usuń">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </div>
+        <?php endif; ?>
+        <div class="card-content">
+            <h3><?= htmlspecialchars($char->getName(), ENT_QUOTES, 'UTF-8') ?></h3>
+            <p><?= htmlspecialchars($char->getDescription(), ENT_QUOTES, 'UTF-8') ?></p>
+        </div>
+    </div>
+    
+    <?php if ($showFilters): ?>
+        <!-- Filters badges (bottom) -->
+        <div class="character-filters-display" 
+             data-character-id="<?= $char->getId() ?>"
+             style="padding:8px;background:rgba(0,0,0,0.02);border-top:1px solid var(--border,#eee);min-height:36px;display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:0.75rem;">
+            <span style="display:none;color:var(--text-muted);">Brak filtrów</span>
+        </div>
+    <?php endif; ?>
+</div>

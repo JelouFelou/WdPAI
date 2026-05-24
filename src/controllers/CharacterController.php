@@ -127,6 +127,78 @@ class CharacterController extends AppController
         exit();
     }
 
+    public function renameWorld()
+    {
+        $this->requireLogin();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            exit();
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $worldId = (int)($input['worldId'] ?? 0);
+        $name = trim($input['name'] ?? '');
+
+        if ($worldId <= 0 || $name === '') {
+            http_response_code(400);
+            echo json_encode(['error' => 'Brak wymaganych parametrów']);
+            exit();
+        }
+
+        $world = $this->worldRepository->getWorldByIdAndUserId($worldId, $_SESSION['user_id']);
+        if (!$world) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Folder nie znaleziony']);
+            exit();
+        }
+
+        $this->worldRepository->updateWorldName($worldId, $_SESSION['user_id'], $name);
+        echo json_encode(['success' => true]);
+        exit();
+    }
+
+    public function deleteWorld()
+    {
+        $this->requireLogin();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            exit();
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $worldId = (int)($input['worldId'] ?? 0);
+        $confirmation = trim($input['confirmation'] ?? '');
+
+        $world = $worldId > 0
+            ? $this->worldRepository->getWorldByIdAndUserId($worldId, $_SESSION['user_id'])
+            : null;
+
+        if (!$world) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Folder nie znaleziony']);
+            exit();
+        }
+
+        if ($confirmation !== $world->getName()) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Wpisana nazwa folderu nie zgadza się']);
+            exit();
+        }
+
+        $worldIds = $this->worldRepository->getDescendantWorldIds($worldId, $_SESSION['user_id']);
+        $this->worldRepository->moveCharactersFromWorldsToRoot($_SESSION['user_id'], $worldIds);
+        $this->worldRepository->deleteWorld($worldId, $_SESSION['user_id']);
+
+        echo json_encode(['success' => true]);
+        exit();
+    }
+
     // -----------------------------------------------------------------------
     //  API: przypisz postać do folderu
     // -----------------------------------------------------------------------
@@ -336,7 +408,7 @@ class CharacterController extends AppController
                 $image = 'default.png';
             }
 
-            $this->characterRepository->updateCharacter($id, $name, $description, $image, $templateId);
+            $this->characterRepository->updateCharacter($id, $name, $description, $image, $templateId, $character->getIdWorld());
 
             if (isset($_POST['field_values']) && is_array($_POST['field_values'])) {
                 $this->characterRepository->saveCharacterFieldValues($id, $_POST['field_values']);
@@ -718,6 +790,114 @@ class CharacterController extends AppController
 
         echo json_encode(['success' => true]);
         exit();
+    }
+
+    public function duplicateCharacter()
+    {
+        $this->requireLogin();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            exit();
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $characterId = (int)($input['characterId'] ?? 0);
+
+        if ($characterId <= 0) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Brak ID postaci']);
+            exit();
+        }
+
+        $newId = $this->characterRepository->duplicateCharacter($characterId, $_SESSION['user_id']);
+        if (!$newId) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Postać nie znaleziona']);
+            exit();
+        }
+
+        echo json_encode(['success' => true, 'id' => $newId]);
+        exit();
+    }
+
+    public function deleteCharacter()
+    {
+        $this->requireLogin();
+        header('Content-Type: application/json');
+
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed']);
+            exit();
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $characterId = (int)($input['characterId'] ?? 0);
+        $confirmation = trim($input['confirmation'] ?? '');
+
+        $character = $characterId > 0
+            ? $this->characterRepository->getCharacterByIdAndUserId($characterId, $_SESSION['user_id'])
+            : null;
+
+        if (!$character) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Postać nie znaleziona']);
+            exit();
+        }
+
+        if ($confirmation !== $character->getName()) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Wpisana nazwa postaci nie zgadza się']);
+            exit();
+        }
+
+        $images = $this->getCharacterImageFilenames($character);
+        foreach ($this->characterRepository->getCharacterVariants($character->getId()) as $variant) {
+            $this->collectUploadFilename($images, $variant['image'] ?? null);
+        }
+
+        $this->characterRepository->deleteCharacter($characterId, $_SESSION['user_id']);
+        $this->deleteUnusedUploadFiles($images);
+        echo json_encode(['success' => true]);
+        exit();
+    }
+
+    private function getCharacterImageFilenames(Character $character): array
+    {
+        $filenames = [];
+        $this->collectUploadFilename($filenames, $character->getImage());
+        return $filenames;
+    }
+
+    private function collectUploadFilename(array &$filenames, ?string $image): void
+    {
+        $image = trim((string)$image);
+        if ($image === '' || in_array($image, ['default.png', 'default.jpg', 'default_dark.png'], true)) {
+            return;
+        }
+
+        $filename = basename($image);
+        if ($filename !== '' && $filename === $image) {
+            $filenames[$filename] = true;
+        }
+    }
+
+    private function deleteUnusedUploadFiles(array $filenames): void
+    {
+        $uploadDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'public' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
+        foreach (array_keys($filenames) as $filename) {
+            if ($this->characterRepository->countImageReferences($filename) > 0) {
+                continue;
+            }
+
+            $path = $uploadDir . $filename;
+            if (is_file($path)) {
+                @unlink($path);
+            }
+        }
     }
 
     private function uploadCharacterImage(string $fallback): string

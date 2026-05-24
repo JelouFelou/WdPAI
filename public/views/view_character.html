@@ -112,6 +112,8 @@ foreach (($fields ?? []) as $field) {
 $image = !empty($selectedVariant['image'])
     ? $selectedVariant['image']
     : ($character->getImage() ?: 'default.png');
+$defaultCharacterImage = (($userSettings['theme'] ?? 'light') === 'dark') ? 'default_dark.png' : 'default.png';
+$displayImage = in_array($image, ['default.png', 'default.jpg', ''], true) ? $defaultCharacterImage : $image;
 ?>
 
 <div class="wiki-view">
@@ -165,8 +167,8 @@ $image = !empty($selectedVariant['image'])
             <?php endif; ?>
 
             <img class="js-lightbox-image"
-                 src="public/uploads/<?= vc_escape($image); ?>"
-                 data-full-src="public/uploads/<?= vc_escape($image); ?>"
+                 src="public/uploads/<?= vc_escape($displayImage); ?>"
+                 data-full-src="public/uploads/<?= vc_escape($displayImage); ?>"
                  alt="<?= vc_escape($character->getName()); ?>">
             <h2><?= vc_escape($character->getName()); ?></h2>
             <?php if(!empty($selectedVariant)): ?>

@@ -12,7 +12,7 @@
     align-items: flex-start;
     justify-content: space-between;
     gap: 24px;
-    background: white;
+    background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 24px 28px;
@@ -44,7 +44,7 @@
 
 .wiki-article,
 .wiki-infobox {
-    background: white;
+    background: var(--surface);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     box-shadow: var(--card-shadow);
@@ -120,7 +120,7 @@
 
 .wiki-infobox-field h3 {
     margin: 0 0 8px;
-    color: #555;
+    color: var(--text-muted);
     font-size: 0.8rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -148,8 +148,8 @@
 
 .wiki-data-table th {
     width: 34%;
-    background: #f6f8fa;
-    color: #555;
+    background: var(--surface-soft);
+    color: var(--text-muted);
 }
 
 .wiki-single-image img {
@@ -172,7 +172,7 @@
     overflow: hidden;
     border-radius: 8px;
     border: 1px solid var(--border-color);
-    background: #f6f8fa;
+    background: var(--surface-soft);
 }
 
 .wiki-gallery img {

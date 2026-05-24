@@ -7,13 +7,21 @@ overflow: hidden;
 
 .sidebar {
 width: var(--sidebar-w);
-background: white;
+background: var(--surface);
 border-right: 1px solid var(--border-color);
 display: flex;
 flex-direction: column;
 justify-content: space-between;
 padding: 25px 15px;
 flex-shrink: 0;
+box-sizing: border-box;
+}
+
+.sidebar-top {
+display: flex;
+flex-direction: column;
+flex: 1;
+min-height: 0;
 }
 
 .logo-container { padding: 0 10px 30px; }
@@ -34,7 +42,13 @@ font-size: 0.95rem;
 }
 .nav-menu li a:hover, .nav-menu li a.active { background: var(--primary-light); color: var(--primary); }
 
-.sidebar-section { margin-top: 40px; }
+.sidebar-section {
+margin-top: 40px;
+display: flex;
+flex-direction: column;
+flex: 1;
+min-height: 0;
+}
 .section-title {
 font-size: 0.7rem; font-weight: 700; color: var(--text-muted);
 letter-spacing: 1px; padding: 0 15px 10px; display: block;
@@ -42,7 +56,7 @@ letter-spacing: 1px; padding: 0 15px 10px; display: block;
 
 .storage-info {
 padding: 15px;
-background: #fafafa;
+background: var(--surface-soft);
 border-radius: 12px;
 margin-bottom: 20px;
 }
@@ -63,5 +77,17 @@ border-radius: 3px;
 overflow: hidden;
 }
 
-.progress-fill { height: 100%; background: var(--primary); }
+.progress-fill { height: 100%; background: var(--primary); transition: width 0.2s ease, background-color 0.2s ease; }
 .storage-detail { font-size: 0.65rem; color: var(--text-muted); display: block; margin-top: 5px; }
+.storage-warning {
+display: block;
+font-size: 0.68rem;
+font-weight: 700;
+color: #E74C3C;
+line-height: 1.25;
+margin-top: 6px;
+}
+
+.sidebar-bottom-menu {
+flex-shrink: 0;
+}

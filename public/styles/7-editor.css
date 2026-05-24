@@ -9,12 +9,12 @@ overflow-y: auto;
 
 .template-header {
 display: flex; justify-content: space-between; align-items: flex-start;
-background: white; padding: 20px 30px; border-radius: 16px;
+background: var(--surface); padding: 20px 30px; border-radius: 16px;
 box-shadow: var(--card-shadow); margin-bottom: 30px;
 }
 
 .template-meta {
-background: white; border-radius: 20px; padding: 30px;
+background: var(--surface); border-radius: 20px; padding: 30px;
 margin-bottom: 25px; display: flex; gap: 30px;
 box-shadow: 0 4px 15px rgba(0,0,0,0.05); width: 100%;
 }
@@ -28,7 +28,7 @@ padding-bottom: 60px;
 }
 
 .template-sections > div, .template-column {
-background: white; padding: 30px; border-radius: 20px;
+background: var(--surface); padding: 30px; border-radius: 20px;
 box-shadow: var(--card-shadow);
 }
 
@@ -37,10 +37,10 @@ box-shadow: var(--card-shadow);
     display: flex;
     flex-direction: column;
     align-items: center;
-    background: #ffffff;
+    background: var(--surface);
     padding: 15px;
     border-radius: 12px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--border-color);
     width: 100%; /* Zmiana na 100%, aby dostosowywało się do prawej kolumny */
     box-sizing: border-box;
 }
@@ -56,6 +56,12 @@ box-shadow: var(--card-shadow);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
+body[data-theme="dark"] .template-meta-right img,
+body[data-theme="dark"] #profile-img-preview {
+background: var(--surface-soft);
+border: 1px solid var(--border-color);
+}
+
 .upload-label {
 font-size: 0.75rem; font-weight: 600; color: var(--primary);
 cursor: pointer; background: var(--primary-light);
@@ -64,15 +70,61 @@ padding: 8px 12px; border-radius: 6px; width: 100%; text-align: center;
 
 /* Pola Drag & Drop */
 .field-item {
-background: #fff; border: 1px solid #eee; margin-bottom: 10px;
+background: var(--surface); border: 1px solid var(--border-color); margin-bottom: 10px;
 padding: 10px 15px; border-radius: 12px; display: flex;
 align-items: center; gap: 10px;
+color: var(--text-main);
+}
+
+.field-content {
+flex: 1;
+min-width: 0;
+}
+
+.field-content > input[type="text"] {
+background: var(--input-bg);
+border: 1px solid var(--border-color);
+color: var(--text-main);
+border-radius: 4px;
+padding: 4px 6px;
+}
+
+.type-preview-tag small {
+color: inherit;
+font-weight: 700;
+}
+
+.table-rows-editor,
+.select-options-editor,
+.date-editor {
+background: var(--surface-alt) !important;
+border-color: var(--border-color) !important;
+color: var(--text-main);
+}
+
+.delete-field-btn {
+background: var(--surface-soft);
+border: 1px solid var(--border-color);
+border-radius: 4px;
+color: var(--text-main);
+cursor: pointer;
+width: 32px;
+height: 28px;
+display: inline-flex;
+align-items: center;
+justify-content: center;
+}
+
+.delete-field-btn:hover {
+background: rgba(231, 76, 60, 0.16);
+border-color: var(--danger);
+color: var(--danger);
 }
 
 .drag-handle { cursor: grab; color: var(--text-muted); padding: 5px; }
 
 .add-circle-btn {
-background: #f0f0f0; color: #333; width: 40px; height: 40px;
+background: var(--surface-soft); color: var(--text-main); width: 40px; height: 40px;
 border-radius: 50%; display: flex; align-items: center;
 justify-content: center; border: none; cursor: pointer; margin: 20px auto;
 }
@@ -88,7 +140,7 @@ justify-content: center; border: none; cursor: pointer; margin: 20px auto;
 }
 
 .character-profile-wrapper {
-    background: white;
+    background: var(--surface);
     border-radius: 20px;
     box-shadow: var(--card-shadow);
     display: flex;

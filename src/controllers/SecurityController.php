@@ -57,6 +57,15 @@ class SecurityController extends AppController{
             return $this->renderLoginError('Invalid email/username or password.');
         }
 
+        if ($this->isUserBanned($user)) {
+            http_response_code(403);
+            $message = 'Konto zablokowane do ' . $user->getBannedUntil();
+            if ($user->getBanReason()) {
+                $message .= '. Powod: ' . $user->getBanReason();
+            }
+            return $this->renderLoginError($message);
+        }
+
         $this->clearFailedLogins();
         session_regenerate_id(true);
         $_SESSION['user_id'] = $user->getId();
@@ -64,6 +73,7 @@ class SecurityController extends AppController{
         $_SESSION['username'] = $user->getUsername();
         $_SESSION['first_name'] = $user->getFirstName(); 
         $_SESSION['last_name'] = $user->getLastName();
+        $_SESSION['account_type'] = $user->getAccountType();
 
         http_response_code(303);
         $url = $this->baseUrl();

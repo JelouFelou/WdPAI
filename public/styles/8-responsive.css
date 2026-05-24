@@ -4,6 +4,8 @@
 .template-sections, .template-grid { grid-template-columns: 1fr; }
 .template-meta { flex-direction: column; }
 .grid-controls { display: none; }
+.admin-user-main, .admin-actions { grid-template-columns: 1fr; flex-direction: column; align-items: stretch; }
+.admin-actions form { flex-wrap: wrap; }
 }
 
 @media (max-width: 600px) {

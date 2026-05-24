@@ -20,6 +20,10 @@ CREATE TABLE users (
     lastname VARCHAR(50) DEFAULT '',
     username VARCHAR(50),
     bio TEXT DEFAULT '',
+    account_type INTEGER NOT NULL DEFAULT 0,
+    banned_until TIMESTAMP WITH TIME ZONE DEFAULT NULL,
+    ban_reason TEXT DEFAULT NULL,
+    deletion_scheduled_at TIMESTAMP WITH TIME ZONE DEFAULT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT TRUE
 );

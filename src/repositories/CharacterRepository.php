@@ -106,8 +106,16 @@ class CharacterRepository extends Repository
 
         $nameClause = '';
         if ($nameLike !== null && trim($nameLike) !== '') {
-            $params[':nameLike'] = '%' . mb_strtolower($nameLike) . '%';
-            $nameClause = 'AND LOWER(c.name) LIKE :nameLike';
+            $tokens = preg_split('/\s+/', trim($nameLike));
+            $tokenClauses = [];
+            foreach ($tokens as $i => $token) {
+                $key = ':nameLike' . $i;
+                $params[$key] = '%' . mb_strtolower($token) . '%';
+                $tokenClauses[] = 'LOWER(c.name) LIKE ' . $key;
+            }
+            if (!empty($tokenClauses)) {
+                $nameClause = 'AND (' . implode(' AND ', $tokenClauses) . ')';
+            }
         }
 
         // Start building SQL
@@ -181,6 +189,111 @@ class CharacterRepository extends Repository
             WHERE id = ?
         ');
         $stmt->execute([$statusId, $characterId]);
+    }
+
+    public function duplicateCharacter(int $characterId, int $userId): ?int
+    {
+        $db = $this->database->connect();
+        try {
+            $db->beginTransaction();
+
+            $stmt = $db->prepare('SELECT * FROM characters WHERE id = :id AND id_user = :userId');
+            $stmt->bindValue(':id', $characterId, PDO::PARAM_INT);
+            $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+            $stmt->execute();
+            $character = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if (!$character) {
+                $db->rollBack();
+                return null;
+            }
+
+            $insert = $db->prepare('
+                INSERT INTO characters (name, description, image, id_user, id_template, id_world, status_id)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+                RETURNING id
+            ');
+            $insert->execute([
+                $character['name'] . ' (kopia)',
+                $character['description'],
+                $character['image'],
+                $character['id_user'],
+                $character['id_template'],
+                $character['id_world'],
+                $character['status_id'],
+            ]);
+            $newCharacterId = (int)$insert->fetchColumn();
+
+            $copyFields = $db->prepare('
+                INSERT INTO character_field_values (id_character, id_template_field, value)
+                SELECT ?, id_template_field, value
+                FROM character_field_values
+                WHERE id_character = ?
+            ');
+            $copyFields->execute([$newCharacterId, $characterId]);
+
+            $variantStmt = $db->prepare('
+                SELECT * FROM character_variants
+                WHERE id_character = ?
+                ORDER BY order_number ASC, id ASC
+            ');
+            $variantStmt->execute([$characterId]);
+
+            $insertVariant = $db->prepare('
+                INSERT INTO character_variants (id_character, name, image, order_number)
+                VALUES (?, ?, ?, ?)
+                RETURNING id
+            ');
+            $copyVariantValues = $db->prepare('
+                INSERT INTO character_variant_field_values (id_variant, id_template_field, value)
+                SELECT ?, id_template_field, value
+                FROM character_variant_field_values
+                WHERE id_variant = ?
+            ');
+
+            foreach ($variantStmt->fetchAll(PDO::FETCH_ASSOC) as $variant) {
+                $insertVariant->execute([
+                    $newCharacterId,
+                    $variant['name'],
+                    $variant['image'],
+                    $variant['order_number'],
+                ]);
+                $newVariantId = (int)$insertVariant->fetchColumn();
+                $copyVariantValues->execute([$newVariantId, $variant['id']]);
+            }
+
+            $db->commit();
+            return $newCharacterId;
+        } catch (Exception $e) {
+            if ($db->inTransaction()) {
+                $db->rollBack();
+            }
+            throw $e;
+        }
+    }
+
+    public function deleteCharacter(int $characterId, int $userId): void
+    {
+        $stmt = $this->database->connect()->prepare(
+            'DELETE FROM characters WHERE id = :id AND id_user = :userId'
+        );
+        $stmt->bindValue(':id', $characterId, PDO::PARAM_INT);
+        $stmt->bindValue(':userId', $userId, PDO::PARAM_INT);
+        $stmt->execute();
+    }
+
+    public function countImageReferences(string $filename): int
+    {
+        $stmt = $this->database->connect()->prepare('
+            SELECT
+                (SELECT COUNT(*) FROM characters WHERE image = :filename)
+                +
+                (SELECT COUNT(*) FROM character_variants WHERE image = :filename)
+        ');
+        $stmt->bindValue(':filename', $filename);
+        $stmt->execute();
+
+        return (int)$stmt->fetchColumn();
     }
 
     public function getCharacterFieldValues(int $characterId): array

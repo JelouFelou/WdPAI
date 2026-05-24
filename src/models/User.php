@@ -8,6 +8,10 @@ class User {
     private $lastName;
     private $username;
     private $bio;
+    private $accountType;
+    private $bannedUntil;
+    private $banReason;
+    private $deletionScheduledAt;
 
     public function __construct(
         string $email, 
@@ -16,7 +20,11 @@ class User {
         string $lastName, 
         string $bio = '', 
         int $id = null,
-        string $username = ''
+        string $username = '',
+        int $accountType = 0,
+        ?string $bannedUntil = null,
+        ?string $banReason = null,
+        ?string $deletionScheduledAt = null
     ) {
         $this->email = $email;
         $this->password = $password;
@@ -25,6 +33,10 @@ class User {
         $this->bio = $bio;
         $this->id = $id;
         $this->username = $username;
+        $this->accountType = $accountType;
+        $this->bannedUntil = $bannedUntil;
+        $this->banReason = $banReason;
+        $this->deletionScheduledAt = $deletionScheduledAt;
     }
 
     public function getEmail(): string {
@@ -49,6 +61,26 @@ class User {
     
     public function getUsername(): string {
         return $this->username;
+    }
+
+    public function getAccountType(): int {
+        return $this->accountType;
+    }
+
+    public function isAdmin(): bool {
+        return $this->accountType === 1;
+    }
+
+    public function getBannedUntil(): ?string {
+        return $this->bannedUntil;
+    }
+
+    public function getBanReason(): ?string {
+        return $this->banReason;
+    }
+
+    public function getDeletionScheduledAt(): ?string {
+        return $this->deletionScheduledAt;
     }
     
     // Możesz dodać przydatne metody logiczne

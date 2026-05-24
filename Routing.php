@@ -5,6 +5,8 @@ require_once 'src/controllers/DashboardController.php';
 require_once 'src/controllers/TemplateController.php';
 require_once 'src/controllers/CharacterController.php';
 require_once 'src/controllers/FileController.php';
+require_once 'src/controllers/AdminController.php';
+require_once 'src/controllers/SettingsController.php';
 
 class Routing
 {
@@ -32,6 +34,30 @@ class Routing
         'templates' => [
             'controller' => 'TemplateController',
             'action' => 'templates'
+        ],
+        'admin' => [
+            'controller' => 'AdminController',
+            'action' => 'index'
+        ],
+        'admin/ban' => [
+            'controller' => 'AdminController',
+            'action' => 'banUser'
+        ],
+        'admin/unban' => [
+            'controller' => 'AdminController',
+            'action' => 'unbanUser'
+        ],
+        'admin/delete-schedule' => [
+            'controller' => 'AdminController',
+            'action' => 'scheduleDeleteUser'
+        ],
+        'admin/delete-cancel' => [
+            'controller' => 'AdminController',
+            'action' => 'cancelDeleteUser'
+        ],
+        'settings' => [
+            'controller' => 'SettingsController',
+            'action' => 'index'
         ],
         'deleteTemplate' => [
             'controller' => 'TemplateController',
@@ -74,6 +100,14 @@ class Routing
             'controller' => 'CharacterController',
             'action' => 'createWorld'
         ],
+        'api/worlds/rename' => [
+            'controller' => 'CharacterController',
+            'action' => 'renameWorld'
+        ],
+        'api/worlds/delete' => [
+            'controller' => 'CharacterController',
+            'action' => 'deleteWorld'
+        ],
         'api/worlds/assign' => [
             'controller' => 'CharacterController',
             'action' => 'assignCharacterToWorld'
@@ -110,7 +144,15 @@ class Routing
             'controller' => 'CharacterController', 
             'action' => 'restoreDefaultImage'
         ],
-        '/api/search' => [
+        'api/characters/duplicate' => [
+            'controller' => 'CharacterController',
+            'action' => 'duplicateCharacter'
+        ],
+        'api/characters/delete' => [
+            'controller' => 'CharacterController',
+            'action' => 'deleteCharacter'
+        ],
+        'api/search' => [
             'controller' => 'CharacterController',
             'action' => 'globalSearch'
         ],
